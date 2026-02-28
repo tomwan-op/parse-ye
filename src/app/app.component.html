@@ -1,0 +1,49 @@
+@if (browserSupport.checkComplete()) {
+  @if (browserSupport.isSupported()) {
+    <!-- Main App Layout -->
+    <div class="h-screen flex flex-col overflow-hidden">
+      <!-- Navbar -->
+      <app-navbar (uploadClicked)="triggerUpload()" />
+
+      <!-- Main content area -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Left: Thumbnails sidebar -->
+        @if (ui.sidebarOpen()) {
+          <app-thumbnails-sidebar
+            [thumbnails]="thumbnails()"
+            [activePage]="activePage()"
+            (pageSelected)="onPageSelected($event)"
+          />
+        }
+
+        <!-- Center: Document viewer or Upload zone -->
+        @if (hasDocument()) {
+          <app-document-viewer />
+        } @else {
+          <app-upload-zone (filesSelected)="onFilesSelected($event)" />
+        }
+
+        <!-- Right: Results panel -->
+        @if (ui.resultsPanelOpen()) {
+          <app-results-panel />
+        }
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <app-settings-modal />
+  } @else {
+    <app-browser-not-supported />
+  }
+} @else {
+  <!-- Loading splash -->
+  <div class="fixed inset-0 bg-slate-950 flex items-center justify-center">
+    <div class="text-center space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-xl bg-indigo-600 flex items-center justify-center animate-pulse">
+        <span class="text-white text-lg font-bold">P</span>
+      </div>
+      <p class="text-sm text-slate-400">Checking browser compatibility...</p>
+    </div>
+  </div>
+}
+

@@ -122,3 +122,24 @@ export interface Table {
 4. Never add libraries or features outside this spec without my explicit instruction to update section 2 first.
 
 **Next step for Copilot:** Start with project skeleton + Tailwind + DaisyUI + dark mode + BrowserSupportService.
+
+## 10. Implementation Status
+
+**Version:** 0.1.0  
+**Last updated:** 2025-07-15
+
+### Completed (v0.1.0 — Project Skeleton)
+- [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
+- [x] Global styles (dark mode, custom scrollbar, Inter font)
+- [x] Data models (`document.models.ts` — DocumentStructure, Page, DocumentElement, Table, BBox, ProcessingProgress, ResultTab)
+- [x] BrowserSupportService (WebAssembly check on bootstrap)
+- [x] UiService (sidebar, results panel, zoom, tabs, progress state via signals)
+- [x] BrowserNotSupportedComponent (full-screen friendly message)
+- [x] NavbarComponent (logo, upload, process, export dropdown, settings, panel toggles)
+- [x] UploadZoneComponent (drag-and-drop + click file picker)
+- [x] ThumbnailsSidebarComponent (page list with active state)
+- [x] DocumentViewerComponent (canvas + zoom controls)
+- [x] ResultsPanelComponent (5 tabs: Overlay, Tree, Tables, Markdown, JSON)
+- [x] SettingsModalComponent (language selector, preprocessing toggle)
+- [x] AppComponent wired with layout: navbar + sidebar + viewer/upload + results panel + settings modal
+- [x] Build passes with zero errors
