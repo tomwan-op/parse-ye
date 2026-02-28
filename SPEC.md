@@ -125,7 +125,7 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.5.0  
+**Version:** 0.5.1  
 **Last updated:** 2026-02-28
 
 ### Completed (v0.1.0 — Project Skeleton)
@@ -187,6 +187,13 @@ export interface Table {
 - [x] AppComponent: added clearDocument() method; footer "100% client-side · Powered by PaddleOCR"; mobile backdrop overlays for sidebar and results panel
 - [x] Build passes with zero errors
 
+### Completed (v0.5.1 — CI/CD: GitHub Pages Deploy Workflow)
+- [x] `.github/workflows/deploy-to-gh-pages.yml` created
+- [x] Triggers on push/merge to `main` and manual `workflow_dispatch`
+- [x] Steps: checkout → Node.js 20 → `npm ci --legacy-peer-deps` → `npm run build` → deploy via `peaceiris/actions-gh-pages@v4`
+- [x] Deploys `dist/parse-ye/browser` to the `gh-pages` branch using `GITHUB_TOKEN` (contents: write permission)
+- [x] `force_orphan: true` keeps gh-pages branch clean on every deploy
+
 ## 11. Next Tasks (for next agent session)
 
 ### v0.6.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
@@ -212,5 +219,5 @@ export interface Table {
 ### v1.0.0 — MVP Release (SPEC §5)
 - [ ] End-to-end testing of all features in SPEC §5
 - [ ] Production build optimization and bundle size audit
-- [ ] Deployment setup for static hosting (Vercel/Netlify/GitHub Pages) (SPEC §2)
+- [x] Deployment setup for static hosting (GitHub Pages) — workflow added in v0.5.1 (SPEC §2)
 - [ ] README.md with usage instructions, screenshots, and deployment guide
