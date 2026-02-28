@@ -125,8 +125,8 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.2.0  
-**Last updated:** 2025-07-14
+**Version:** 0.3.0  
+**Last updated:** 2025-07-15
 
 ### Completed (v0.1.0 — Project Skeleton)
 - [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
@@ -154,4 +154,10 @@ export interface Table {
 - [x] angular.json updated: pdf.js worker (`pdf.worker.min.mjs`) and OCR model assets (`@gutenye/ocr-models`) copied to build/test output
 - [x] ThumbnailsSidebarComponent upgraded to render canvas-based thumbnails via PdfService
 - [x] DocumentViewerComponent upgraded: renders active page via PdfService, overlay canvas for bounding boxes, overlay toggle, page counter from PdfService.totalPages
+- [x] Build passes with zero errors
+
+### Completed (v0.3.0 — OCR + Structure + Export Services)
+- [x] OcrService (`ocr.service.ts`) — lazy-loads @gutenye/ocr-browser OCR model, converts canvas to data URL for detection, returns raw OcrLine[] with text/confidence/box, tracks loading state via signals
+- [x] StructureService (`structure.service.ts`) — takes raw OCR lines + page dimensions, classifies elements (title/paragraph/list), detects table structures via grid-aligned box analysis, groups consecutive paragraphs, returns Page with DocumentElement[] and Table[]
+- [x] ExportService (`export.service.ts`) — exports DocumentStructure to JSON, Markdown, Plain Text, and searchable PDF (jsPDF with image layer + invisible text layer); uses file-saver for downloads; lazy-loads jspdf and file-saver
 - [x] Build passes with zero errors
