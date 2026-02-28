@@ -126,11 +126,11 @@ export interface Table {
 ## 10. Implementation Status
 
 **Version:** 0.1.0  
-**Last updated:** 2025-07-15
+**Last updated:** 2026-02-28
 
 ### Completed (v0.1.0 — Project Skeleton)
 - [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
-- [x] Global styles (dark mode, custom scrollbar, Inter font)
+- [x] Global styles (dark mode, custom scrollbar, system sans-serif font stack)
 - [x] Data models (`document.models.ts` — DocumentStructure, Page, DocumentElement, Table, BBox, ProcessingProgress, ResultTab)
 - [x] BrowserSupportService (WebAssembly check on bootstrap)
 - [x] UiService (sidebar, results panel, zoom, tabs, progress state via signals)
