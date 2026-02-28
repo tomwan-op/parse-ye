@@ -166,6 +166,16 @@ export class AppComponent implements OnInit {
     this.activePage.set(page);
   }
 
+  clearDocument(): void {
+    this.pdfService.reset();
+    this.hasDocument.set(false);
+    this.thumbnails.set([]);
+    this.activePage.set(1);
+    this.documentStructure.set(null);
+    this.isProcessing.set(false);
+    this.ui.resetProgress();
+  }
+
   async onExport(format: string): Promise<void> {
     const structure = this.documentStructure();
     if (!structure) return;

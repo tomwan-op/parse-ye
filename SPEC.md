@@ -125,7 +125,7 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.4.0  
+**Version:** 0.5.0  
 **Last updated:** 2026-02-28
 
 ### Completed (v0.1.0 — Project Skeleton)
@@ -176,23 +176,34 @@ export interface Table {
 - [x] Fixed StructureService spread type error (TypeScript strict narrowing issue with nullable variable)
 - [x] Build passes with zero errors
 
+### Completed (v0.5.0 — UI Polish & Responsive Layout)
+- [x] DocumentViewerComponent: responsive canvas with CSS max-width/max-height fit modes, ResizeObserver for viewport changes, floating controls bar with Fit to Width / Fit to Height / Original Size toggles, zoom in/out/reset, overlays toggle, page counter
+- [x] NavbarComponent: Process button disabled with tooltip "Upload a document first"; "New/Clear" button next to Upload; ParseYe logo clickable to reset state; improved hover states (indigo-500); Export dropdown with tooltip when disabled; responsive labels hidden on mobile
+- [x] ThumbnailsSidebarComponent: page count label ("X Pages"); enhanced active page highlight with glow/shadow; "Clear all" trash icon button; collapsible on mobile via fixed overlay with backdrop
+- [x] ResultsPanelComponent: renamed "Tree" tab → "Structure"; close button with arrow icon; improved empty-state with pulsing animation and "Waiting for results" text; bottom sheet on mobile via fixed overlay
+- [x] Mobile responsive (<1024px): left sidebar collapses to hamburger overlay; right results panel becomes bottom sheet overlay; backdrop click to dismiss; center preview takes full width; navbar text labels hidden on small screens
+- [x] UploadZoneComponent: responsive padding (p-4 sm:p-8, p-6 sm:p-12); responsive text sizes
+- [x] UiService: added FitMode type and fitMode signal; setFitMode(), updated zoomIn/zoomOut to switch to original mode, resetZoom resets to fit-width
+- [x] AppComponent: added clearDocument() method; footer "100% client-side · Powered by PaddleOCR"; mobile backdrop overlays for sidebar and results panel
+- [x] Build passes with zero errors
+
 ## 11. Next Tasks (for next agent session)
 
-### v0.5.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
+### v0.6.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
 - [ ] Move OCR inference into a dedicated Web Worker using Comlink (SPEC §2 requirement: "All heavy processing must run in Web Workers + Comlink")
 - [ ] Implement optional image preprocessing pipeline (SPEC §7.2): contrast enhancement, deskew, binarize using Native Canvas API
 - [ ] Wire preprocessing toggle from SettingsModalComponent to the processing pipeline
 - [ ] Add language selector state management (SettingsModalComponent → OcrService)
 
-### v0.6.0 — Enhanced UI Features (SPEC §5)
+### v0.7.0 — Enhanced UI Features (SPEC §5)
 - [ ] Multi-file support: handle multiple files in upload, show file list, switch between files
 - [ ] Editable HTML tables in Results Panel Tables tab (SPEC §5.6)
 - [ ] Markdown preview with rendered HTML using `marked` library (SPEC §5.6)
 - [ ] Theme toggle (light/dark mode) in navbar (SPEC §8)
-- [ ] Responsive/mobile-friendly layout collapse (SPEC §5.8)
 - [ ] Keyboard shortcuts for navigation (zoom, page switching)
+- [ ] Make results panel resizable with draggable divider
 
-### v0.7.0 — IndexedDB + Performance (SPEC §2)
+### v0.8.0 — IndexedDB + Performance (SPEC §2)
 - [ ] IndexedDB integration for caching OCR models (SPEC §2: "IndexedDB for cached models")
 - [ ] IndexedDB for recent files (SPEC §2: "IndexedDB for recent files")
 - [ ] Lazy-load heavy dependencies (onnxruntime-web, jspdf) for faster initial load

@@ -7,6 +7,7 @@
         (uploadClicked)="triggerUpload()"
         (processClicked)="processDocument()"
         (exportClicked)="onExport($event)"
+        (clearClicked)="clearDocument()"
         [hasDocument]="hasDocument()"
         [isProcessing]="isProcessing()"
         [hasResults]="documentStructure() !== null"
@@ -38,29 +39,48 @@
       }
 
       <!-- Main content area -->
-      <div class="flex flex-1 overflow-hidden">
+      <div class="flex flex-1 overflow-hidden relative">
         <!-- Left: Thumbnails sidebar -->
         @if (ui.sidebarOpen()) {
           <app-thumbnails-sidebar
             [thumbnails]="thumbnails()"
             [activePage]="activePage()"
             (pageSelected)="onPageSelected($event)"
+            (clearAllClicked)="clearDocument()"
           />
+          <!-- Mobile overlay backdrop for sidebar -->
+          <div
+            class="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-black/40 z-30"
+            (click)="ui.toggleSidebar()"
+          ></div>
         }
 
         <!-- Center: Document viewer or Upload zone -->
-        @if (hasDocument()) {
-          <app-document-viewer
-            [activePage]="activePage()"
-            [documentStructure]="documentStructure()"
-          />
-        } @else {
-          <app-upload-zone (filesSelected)="onFilesSelected($event)" />
-        }
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+          @if (hasDocument()) {
+            <app-document-viewer
+              class="flex-1 flex flex-col overflow-hidden"
+              [activePage]="activePage()"
+              [documentStructure]="documentStructure()"
+            />
+          } @else {
+            <app-upload-zone class="flex-1" (filesSelected)="onFilesSelected($event)" />
+          }
+
+          <!-- Footer -->
+          <div class="shrink-0 bg-slate-900/40 border-t border-slate-800/50 px-4 py-1.5 text-center">
+            <span class="text-[10px] text-slate-600">100% client-side · Powered by PaddleOCR</span>
+          </div>
+        </div>
 
         <!-- Right: Results panel -->
         @if (ui.resultsPanelOpen()) {
           <app-results-panel [documentStructure]="documentStructure()" />
+          <!-- Mobile overlay backdrop for results panel -->
+          <div
+            class="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-black/40 z-30"
+            (click)="ui.toggleResultsPanel()"
+          ></div>
         }
       </div>
     </div>

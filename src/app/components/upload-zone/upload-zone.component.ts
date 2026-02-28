@@ -5,10 +5,10 @@ import { Component, output, signal } from '@angular/core';
   standalone: true,
   template: `
     <div
-      class="flex flex-col items-center justify-center h-full w-full p-8"
+      class="flex flex-col items-center justify-center h-full w-full p-4 sm:p-8"
     >
       <div
-        class="relative w-full max-w-2xl rounded-2xl border-2 border-dashed transition-all duration-300 p-12 text-center cursor-pointer"
+        class="relative w-full max-w-2xl rounded-2xl border-2 border-dashed transition-all duration-300 p-6 sm:p-12 text-center cursor-pointer"
         [class]="isDragging() ? 'border-indigo-500 bg-indigo-600/10 scale-[1.02]' : 'border-slate-700 bg-slate-900/50 hover:border-slate-500 hover:bg-slate-900/80'"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)"
@@ -22,14 +22,14 @@ import { Component, output, signal } from '@angular/core';
           </svg>
         </div>
 
-        <h2 class="text-xl font-semibold text-slate-100 mb-2">
+        <h2 class="text-lg sm:text-xl font-semibold text-slate-100 mb-2">
           Drop your documents here
         </h2>
-        <p class="text-slate-400 mb-4">
+        <p class="text-slate-400 mb-4 text-sm sm:text-base">
           or click to browse files
         </p>
         <p class="text-xs text-slate-500">
-          Supports PDF, PNG, JPG • Multiple files allowed
+          Supports PDF, PNG, JPG · Multiple files allowed
         </p>
 
         <input
