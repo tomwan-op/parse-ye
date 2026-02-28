@@ -1,0 +1,94 @@
+@if (browserSupport.checkComplete()) {
+  @if (browserSupport.isSupported()) {
+    <!-- Main App Layout -->
+    <div class="h-screen flex flex-col overflow-hidden">
+      <!-- Navbar -->
+      <app-navbar
+        (uploadClicked)="triggerUpload()"
+        (processClicked)="processDocument()"
+        (exportClicked)="onExport($event)"
+        [hasDocument]="hasDocument()"
+        [isProcessing]="isProcessing()"
+        [hasResults]="documentStructure() !== null"
+      />
+
+      <!-- Progress bar -->
+      @if (ui.progress().status !== 'idle' && ui.progress().status !== 'complete' && ui.progress().status !== 'error') {
+        <div class="bg-slate-900/80 border-b border-slate-800 px-4 py-2">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                class="bg-indigo-500 h-full rounded-full transition-all duration-300"
+                [style.width.%]="ui.progress().percent"
+              ></div>
+            </div>
+            <span class="text-xs text-slate-400 whitespace-nowrap">{{ ui.progress().message }}</span>
+          </div>
+        </div>
+      }
+      @if (ui.progress().status === 'complete') {
+        <div class="bg-emerald-900/20 border-b border-emerald-800/30 px-4 py-1.5">
+          <span class="text-xs text-emerald-400">✓ {{ ui.progress().message }}</span>
+        </div>
+      }
+      @if (ui.progress().status === 'error') {
+        <div class="bg-red-900/20 border-b border-red-800/30 px-4 py-1.5">
+          <span class="text-xs text-red-400">✗ {{ ui.progress().message }}</span>
+        </div>
+      }
+
+      <!-- Main content area -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Left: Thumbnails sidebar -->
+        @if (ui.sidebarOpen()) {
+          <app-thumbnails-sidebar
+            [thumbnails]="thumbnails()"
+            [activePage]="activePage()"
+            (pageSelected)="onPageSelected($event)"
+          />
+        }
+
+        <!-- Center: Document viewer or Upload zone -->
+        @if (hasDocument()) {
+          <app-document-viewer
+            [activePage]="activePage()"
+            [documentStructure]="documentStructure()"
+          />
+        } @else {
+          <app-upload-zone (filesSelected)="onFilesSelected($event)" />
+        }
+
+        <!-- Right: Results panel -->
+        @if (ui.resultsPanelOpen()) {
+          <app-results-panel [documentStructure]="documentStructure()" />
+        }
+      </div>
+    </div>
+
+    <!-- Hidden file input for navbar upload button -->
+    <input
+      #hiddenFileInput
+      type="file"
+      class="hidden"
+      accept=".pdf,.png,.jpg,.jpeg"
+      multiple
+      (change)="onHiddenFileSelected($event)"
+    />
+
+    <!-- Settings modal -->
+    <app-settings-modal />
+  } @else {
+    <app-browser-not-supported />
+  }
+} @else {
+  <!-- Loading splash -->
+  <div class="fixed inset-0 bg-slate-950 flex items-center justify-center">
+    <div class="text-center space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-xl bg-indigo-600 flex items-center justify-center animate-pulse">
+        <span class="text-white text-lg font-bold">P</span>
+      </div>
+      <p class="text-sm text-slate-400">Checking browser compatibility...</p>
+    </div>
+  </div>
+}
+

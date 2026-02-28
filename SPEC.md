@@ -121,4 +121,85 @@ export interface Table {
 3. After every change, update this file (version, date, status, mark completed items).
 4. Never add libraries or features outside this spec without my explicit instruction to update section 2 first.
 
-**Next step for Copilot:** Start with project skeleton + Tailwind + DaisyUI + dark mode + BrowserSupportService.
+**Next step for Copilot:** See section 11 (Next Tasks) below.
+
+## 10. Implementation Status
+
+**Version:** 0.4.0  
+**Last updated:** 2026-02-28
+
+### Completed (v0.1.0 — Project Skeleton)
+- [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
+- [x] Global styles (dark mode, custom scrollbar, system sans-serif font stack)
+- [x] Data models (`document.models.ts` — DocumentStructure, Page, DocumentElement, Table, BBox, ProcessingProgress, ResultTab)
+- [x] BrowserSupportService (WebAssembly check on bootstrap)
+- [x] UiService (sidebar, results panel, zoom, tabs, progress state via signals)
+- [x] BrowserNotSupportedComponent (full-screen friendly message)
+- [x] NavbarComponent (logo, upload, process, export dropdown, settings, panel toggles)
+- [x] UploadZoneComponent (drag-and-drop + click file picker)
+- [x] ThumbnailsSidebarComponent (page list with active state)
+- [x] DocumentViewerComponent (canvas + zoom controls)
+- [x] ResultsPanelComponent (5 tabs: Overlay, Tree, Tables, Markdown, JSON)
+- [x] SettingsModalComponent (language selector, preprocessing toggle)
+- [x] AppComponent wired with layout: navbar + sidebar + viewer/upload + results panel + settings modal
+- [x] Build passes with zero errors
+
+### Completed (v0.1.1 — Security Upgrade)
+- [x] Upgraded Angular 18.2.14 → 19.2.19 to fix multiple security vulnerabilities (XSRF token leakage, XSS via SVG attributes, Stored XSS via SVG/MathML, i18n XSS — none had patches for v18)
+- [x] Updated TypeScript 5.5 → 5.7, zone.js 0.14 → 0.15 for Angular 19 compatibility
+- [x] Build passes with zero errors, no security advisories remaining
+
+### Completed (v0.2.0 — PdfService + Canvas Rendering)
+- [x] PdfService (`pdf.service.ts`) — loads PDFs via pdfjs-dist, loads images (PNG/JPG), renders pages to canvas at configurable scale, generates thumbnails (0.3x), extracts page dimensions, provides `getPageCanvas()` for downstream OCR pipeline
+- [x] angular.json updated: pdf.js worker (`pdf.worker.min.mjs`) and OCR model assets (`@gutenye/ocr-models`) copied to build/test output
+- [x] ThumbnailsSidebarComponent upgraded to render canvas-based thumbnails via PdfService
+- [x] DocumentViewerComponent upgraded: renders active page via PdfService, overlay canvas for bounding boxes, overlay toggle, page counter from PdfService.totalPages
+- [x] Build passes with zero errors
+
+### Completed (v0.3.0 — OCR + Structure + Export Services)
+- [x] OcrService (`ocr.service.ts`) — lazy-loads @gutenye/ocr-browser OCR model, converts canvas to data URL for detection, returns raw OcrLine[] with text/confidence/box, tracks loading state via signals
+- [x] StructureService (`structure.service.ts`) — takes raw OCR lines + page dimensions, classifies elements (title/paragraph/list), detects table structures via grid-aligned box analysis, groups consecutive paragraphs, returns Page with DocumentElement[] and Table[]
+- [x] ExportService (`export.service.ts`) — exports DocumentStructure to JSON, Markdown, Plain Text, and searchable PDF (jsPDF with image layer + invisible text layer); uses file-saver for downloads; lazy-loads jspdf and file-saver
+- [x] Build passes with zero errors
+
+### Completed (v0.4.0 — Full Processing Pipeline Wiring)
+- [x] AppComponent: injects all services (PdfService, OcrService, StructureService, ExportService, UiService), manages documentStructure signal, processDocument() runs full Upload → Render → OCR → Structure pipeline with progress updates
+- [x] Hidden file input wired to navbar Upload button via viewChild + triggerUpload()
+- [x] onFilesSelected() loads file via PdfService, populates thumbnails, sets hasDocument
+- [x] processDocument() orchestrates: load OCR model → render each page → detect text → analyze structure → build DocumentStructure with metadata
+- [x] Export methods (JSON, Markdown, Plain Text, Searchable PDF) connected to ExportService
+- [x] Progress bar in app template shows real-time status (loading/rendering/recognizing/structuring/complete/error)
+- [x] NavbarComponent: added processClicked/exportClicked outputs, hasDocument/isProcessing/hasResults inputs; Process button disabled when no doc or processing; spinner during processing; Export dropdown conditional on results
+- [x] ResultsPanelComponent: accepts documentStructure input; Overlay tab shows legend + stats; Tree tab shows hierarchical elements by page with type badges; Tables tab renders detected tables; Markdown tab shows structureToMarkdown output; JSON tab shows formatted JSON
+- [x] DocumentViewerComponent receives activePage + documentStructure inputs from AppComponent for overlay rendering
+- [x] angular.json: added externalDependencies for fs/path (opencv.js Node built-ins used by @gutenye/ocr-common)
+- [x] Fixed StructureService spread type error (TypeScript strict narrowing issue with nullable variable)
+- [x] Build passes with zero errors
+
+## 11. Next Tasks (for next agent session)
+
+### v0.5.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
+- [ ] Move OCR inference into a dedicated Web Worker using Comlink (SPEC §2 requirement: "All heavy processing must run in Web Workers + Comlink")
+- [ ] Implement optional image preprocessing pipeline (SPEC §7.2): contrast enhancement, deskew, binarize using Native Canvas API
+- [ ] Wire preprocessing toggle from SettingsModalComponent to the processing pipeline
+- [ ] Add language selector state management (SettingsModalComponent → OcrService)
+
+### v0.6.0 — Enhanced UI Features (SPEC §5)
+- [ ] Multi-file support: handle multiple files in upload, show file list, switch between files
+- [ ] Editable HTML tables in Results Panel Tables tab (SPEC §5.6)
+- [ ] Markdown preview with rendered HTML using `marked` library (SPEC §5.6)
+- [ ] Theme toggle (light/dark mode) in navbar (SPEC §8)
+- [ ] Responsive/mobile-friendly layout collapse (SPEC §5.8)
+- [ ] Keyboard shortcuts for navigation (zoom, page switching)
+
+### v0.7.0 — IndexedDB + Performance (SPEC §2)
+- [ ] IndexedDB integration for caching OCR models (SPEC §2: "IndexedDB for cached models")
+- [ ] IndexedDB for recent files (SPEC §2: "IndexedDB for recent files")
+- [ ] Lazy-load heavy dependencies (onnxruntime-web, jspdf) for faster initial load
+- [ ] Performance: optimize large PDF rendering with viewport-based lazy page rendering
+
+### v1.0.0 — MVP Release (SPEC §5)
+- [ ] End-to-end testing of all features in SPEC §5
+- [ ] Production build optimization and bundle size audit
+- [ ] Deployment setup for static hosting (Vercel/Netlify/GitHub Pages) (SPEC §2)
+- [ ] README.md with usage instructions, screenshots, and deployment guide
