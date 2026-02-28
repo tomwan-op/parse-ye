@@ -1,4 +1,4 @@
-import { Component, inject, input, effect, viewChild, ElementRef, signal, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, inject, input, effect, viewChild, ElementRef, signal } from '@angular/core';
 import { UiService, FitMode } from '../../services/ui.service';
 import { PdfService } from '../../services/pdf.service';
 import { DocumentStructure, DocumentElement } from '../../models/document.models';
@@ -9,7 +9,7 @@ import { DocumentStructure, DocumentElement } from '../../models/document.models
   template: `
     <div class="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
       <!-- Canvas area -->
-      <div #canvasContainer class="flex-1 overflow-auto flex items-center justify-center p-4">
+      <div class="flex-1 overflow-auto flex items-center justify-center p-4">
         <div
           class="relative rounded-lg shadow-2xl shadow-black/50"
           [style.transform]="ui.fitMode() === 'original' ? 'scale(' + ui.currentZoom() + ')' : undefined"
@@ -107,7 +107,7 @@ import { DocumentStructure, DocumentElement } from '../../models/document.models
     </div>
   `,
 })
-export class DocumentViewerComponent implements AfterViewInit, OnDestroy {
+export class DocumentViewerComponent {
   private static readonly RENDER_SCALE = 1.5;
 
   ui = inject(UiService);
@@ -120,8 +120,6 @@ export class DocumentViewerComponent implements AfterViewInit, OnDestroy {
 
   private documentCanvas = viewChild<ElementRef<HTMLCanvasElement>>('documentCanvas');
   private overlayCanvas = viewChild<ElementRef<HTMLCanvasElement>>('overlayCanvas');
-  private canvasContainer = viewChild<ElementRef<HTMLDivElement>>('canvasContainer');
-  private resizeObserver: ResizeObserver | null = null;
 
   constructor() {
     // Re-render when page changes
@@ -143,24 +141,6 @@ export class DocumentViewerComponent implements AfterViewInit, OnDestroy {
         this.drawOverlays(structure, page, overlayRef.nativeElement, docRef.nativeElement);
       }
     });
-  }
-
-  ngAfterViewInit(): void {
-    const container = this.canvasContainer();
-    if (container) {
-      this.resizeObserver = new ResizeObserver(() => {
-        // Force Angular change detection on resize by touching a signal
-        const currentFit = this.ui.fitMode();
-        if (currentFit !== 'original') {
-          // Canvases auto-resize via CSS max-width/max-height
-        }
-      });
-      this.resizeObserver.observe(container.nativeElement);
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.resizeObserver?.disconnect();
   }
 
   zoomPercent() {
