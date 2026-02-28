@@ -125,7 +125,7 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.3.0  
+**Version:** 0.4.0  
 **Last updated:** 2025-07-15
 
 ### Completed (v0.1.0 — Project Skeleton)
@@ -160,4 +160,18 @@ export interface Table {
 - [x] OcrService (`ocr.service.ts`) — lazy-loads @gutenye/ocr-browser OCR model, converts canvas to data URL for detection, returns raw OcrLine[] with text/confidence/box, tracks loading state via signals
 - [x] StructureService (`structure.service.ts`) — takes raw OCR lines + page dimensions, classifies elements (title/paragraph/list), detects table structures via grid-aligned box analysis, groups consecutive paragraphs, returns Page with DocumentElement[] and Table[]
 - [x] ExportService (`export.service.ts`) — exports DocumentStructure to JSON, Markdown, Plain Text, and searchable PDF (jsPDF with image layer + invisible text layer); uses file-saver for downloads; lazy-loads jspdf and file-saver
+- [x] Build passes with zero errors
+
+### Completed (v0.4.0 — Full Processing Pipeline Wiring)
+- [x] AppComponent: injects all services (PdfService, OcrService, StructureService, ExportService, UiService), manages documentStructure signal, processDocument() runs full Upload → Render → OCR → Structure pipeline with progress updates
+- [x] Hidden file input wired to navbar Upload button via viewChild + triggerUpload()
+- [x] onFilesSelected() loads file via PdfService, populates thumbnails, sets hasDocument
+- [x] processDocument() orchestrates: load OCR model → render each page → detect text → analyze structure → build DocumentStructure with metadata
+- [x] Export methods (JSON, Markdown, Plain Text, Searchable PDF) connected to ExportService
+- [x] Progress bar in app template shows real-time status (loading/rendering/recognizing/structuring/complete/error)
+- [x] NavbarComponent: added processClicked/exportClicked outputs, hasDocument/isProcessing/hasResults inputs; Process button disabled when no doc or processing; spinner during processing; Export dropdown conditional on results
+- [x] ResultsPanelComponent: accepts documentStructure input; Overlay tab shows legend + stats; Tree tab shows hierarchical elements by page with type badges; Tables tab renders detected tables; Markdown tab shows structureToMarkdown output; JSON tab shows formatted JSON
+- [x] DocumentViewerComponent receives activePage + documentStructure inputs from AppComponent for overlay rendering
+- [x] angular.json: added externalDependencies for fs/path (opencv.js Node built-ins used by @gutenye/ocr-common)
+- [x] Fixed StructureService spread type error (TypeScript strict narrowing issue with nullable variable)
 - [x] Build passes with zero errors

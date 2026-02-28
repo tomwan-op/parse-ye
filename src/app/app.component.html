@@ -3,7 +3,39 @@
     <!-- Main App Layout -->
     <div class="h-screen flex flex-col overflow-hidden">
       <!-- Navbar -->
-      <app-navbar (uploadClicked)="triggerUpload()" />
+      <app-navbar
+        (uploadClicked)="triggerUpload()"
+        (processClicked)="processDocument()"
+        (exportClicked)="onExport($event)"
+        [hasDocument]="hasDocument()"
+        [isProcessing]="isProcessing()"
+        [hasResults]="documentStructure() !== null"
+      />
+
+      <!-- Progress bar -->
+      @if (ui.progress().status !== 'idle' && ui.progress().status !== 'complete' && ui.progress().status !== 'error') {
+        <div class="bg-slate-900/80 border-b border-slate-800 px-4 py-2">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+              <div
+                class="bg-indigo-500 h-full rounded-full transition-all duration-300"
+                [style.width.%]="ui.progress().percent"
+              ></div>
+            </div>
+            <span class="text-xs text-slate-400 whitespace-nowrap">{{ ui.progress().message }}</span>
+          </div>
+        </div>
+      }
+      @if (ui.progress().status === 'complete') {
+        <div class="bg-emerald-900/20 border-b border-emerald-800/30 px-4 py-1.5">
+          <span class="text-xs text-emerald-400">✓ {{ ui.progress().message }}</span>
+        </div>
+      }
+      @if (ui.progress().status === 'error') {
+        <div class="bg-red-900/20 border-b border-red-800/30 px-4 py-1.5">
+          <span class="text-xs text-red-400">✗ {{ ui.progress().message }}</span>
+        </div>
+      }
 
       <!-- Main content area -->
       <div class="flex flex-1 overflow-hidden">
@@ -18,17 +50,30 @@
 
         <!-- Center: Document viewer or Upload zone -->
         @if (hasDocument()) {
-          <app-document-viewer />
+          <app-document-viewer
+            [activePage]="activePage()"
+            [documentStructure]="documentStructure()"
+          />
         } @else {
           <app-upload-zone (filesSelected)="onFilesSelected($event)" />
         }
 
         <!-- Right: Results panel -->
         @if (ui.resultsPanelOpen()) {
-          <app-results-panel />
+          <app-results-panel [documentStructure]="documentStructure()" />
         }
       </div>
     </div>
+
+    <!-- Hidden file input for navbar upload button -->
+    <input
+      #hiddenFileInput
+      type="file"
+      class="hidden"
+      accept=".pdf,.png,.jpg,.jpeg"
+      multiple
+      (change)="onHiddenFileSelected($event)"
+    />
 
     <!-- Settings modal -->
     <app-settings-modal />

@@ -174,11 +174,11 @@ export class StructureService {
     let current: DocumentElement | null = null;
 
     for (const el of elements) {
-      if (el.type === 'paragraph' && current?.type === 'paragraph') {
+      if (el.type === 'paragraph' && current != null && current.type === 'paragraph') {
         const gap = el.bbox.y - (current.bbox.y + current.bbox.height);
         if (gap < 15 && Math.abs(el.bbox.x - current.bbox.x) < 20) {
           current = {
-            ...current,
+            ...current as DocumentElement,
             text: current.text + ' ' + el.text,
             bbox: {
               x: Math.min(current.bbox.x, el.bbox.x),

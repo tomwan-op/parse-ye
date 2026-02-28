@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, input } from '@angular/core';
 import { UiService } from '../../services/ui.service';
 
 @Component({
@@ -33,29 +33,44 @@ import { UiService } from '../../services/ui.service';
           </svg>
           Upload
         </button>
-        <button class="btn btn-sm btn-primary gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-          </svg>
-          Process
+        <button
+          class="btn btn-sm btn-primary gap-2"
+          [disabled]="!hasDocument() || isProcessing()"
+          (click)="processClicked.emit()"
+        >
+          @if (isProcessing()) {
+            <span class="loading loading-spinner loading-xs"></span>
+            Processing...
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+            </svg>
+            Process
+          }
         </button>
       </div>
 
       <!-- Right: Settings + Export + Results toggle -->
       <div class="flex items-center gap-1">
         <div class="dropdown dropdown-end">
-          <button tabindex="0" class="btn btn-ghost btn-sm text-slate-400 hover:text-emerald-400 gap-1">
+          <button
+            tabindex="0"
+            class="btn btn-ghost btn-sm text-slate-400 hover:text-emerald-400 gap-1"
+            [class.btn-disabled]="!hasResults()"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
             Export
           </button>
-          <ul tabindex="0" class="dropdown-content menu bg-slate-800 border border-slate-700 rounded-xl p-2 w-48 shadow-xl mt-2">
-            <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm">JSON</a></li>
-            <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm">Markdown</a></li>
-            <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm">Plain Text</a></li>
-            <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm">Searchable PDF</a></li>
-          </ul>
+          @if (hasResults()) {
+            <ul tabindex="0" class="dropdown-content menu bg-slate-800 border border-slate-700 rounded-xl p-2 w-48 shadow-xl mt-2 z-50">
+              <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm" (click)="exportClicked.emit('json')">JSON</a></li>
+              <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm" (click)="exportClicked.emit('markdown')">Markdown</a></li>
+              <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm" (click)="exportClicked.emit('text')">Plain Text</a></li>
+              <li><a class="text-slate-300 hover:bg-slate-700 rounded-lg text-sm" (click)="exportClicked.emit('pdf')">Searchable PDF</a></li>
+            </ul>
+          }
         </div>
 
         <button
@@ -85,4 +100,9 @@ import { UiService } from '../../services/ui.service';
 export class NavbarComponent {
   ui = inject(UiService);
   uploadClicked = output<void>();
+  processClicked = output<void>();
+  exportClicked = output<string>();
+  hasDocument = input(false);
+  isProcessing = input(false);
+  hasResults = input(false);
 }
