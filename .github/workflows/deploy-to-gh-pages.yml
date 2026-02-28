@@ -1,0 +1,76 @@
+# Deploy ParseYe to GitHub Pages
+#
+# Triggers:
+#   - Push / merge to the `main` branch
+#   - Manual dispatch (Actions → Run workflow)
+#
+# What it does:
+#   1. Checks out the repository
+#   2. Sets up Node.js 20
+#   3. Installs dependencies (npm ci --legacy-peer-deps)
+#   4. Runs the Angular production build (npm run build)
+#   5. Deploys the built static files to the `gh-pages` branch
+#      using peaceiris/actions-gh-pages
+#
+# One-time GitHub setup (do this once after the workflow has run at least once):
+#   Repository → Settings → Pages → Source: "Deploy from a branch"
+#   Branch: gh-pages  /  Folder: / (root) → Save
+#
+# NOTE: If you rename the Angular project in angular.json, update PUBLISH_DIR below.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Allow the workflow to write to the gh-pages branch
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    env:
+      # Angular application builder outputs browser-ready files here.
+      # Adjust if angular.json outputPath is ever changed.
+      PUBLISH_DIR: dist/parse-ye/browser
+
+    steps:
+      # 1. Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js 20
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Install dependencies
+      #    --legacy-peer-deps is required because several dependencies
+      #    (e.g. @gutenye/ocr-browser and its transitive deps) have
+      #    peer-dependency ranges that would otherwise conflict.
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # 4. Production build
+      - name: Build application
+        run: npm run build
+
+      # 5. Deploy to gh-pages branch
+      #    peaceiris/actions-gh-pages pushes the contents of PUBLISH_DIR
+      #    to the `gh-pages` branch.  The GITHUB_TOKEN permission above
+      #    gives it write access to the repository.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ${{ env.PUBLISH_DIR }}
+          # Keeps a clean gh-pages branch on every deploy
+          force_orphan: true
