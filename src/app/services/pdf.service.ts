@@ -1,11 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set the worker source
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+// Set the worker source (served from /assets/ via angular.json asset config)
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.min.mjs';
 
 export interface PageData {
   pageNumber: number;

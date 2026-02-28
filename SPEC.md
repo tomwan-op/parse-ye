@@ -121,12 +121,12 @@ export interface Table {
 3. After every change, update this file (version, date, status, mark completed items).
 4. Never add libraries or features outside this spec without my explicit instruction to update section 2 first.
 
-**Next step for Copilot:** Start with project skeleton + Tailwind + DaisyUI + dark mode + BrowserSupportService.
+**Next step for Copilot:** See section 11 (Next Tasks) below.
 
 ## 10. Implementation Status
 
 **Version:** 0.4.0  
-**Last updated:** 2025-07-15
+**Last updated:** 2026-02-28
 
 ### Completed (v0.1.0 — Project Skeleton)
 - [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
@@ -175,3 +175,31 @@ export interface Table {
 - [x] angular.json: added externalDependencies for fs/path (opencv.js Node built-ins used by @gutenye/ocr-common)
 - [x] Fixed StructureService spread type error (TypeScript strict narrowing issue with nullable variable)
 - [x] Build passes with zero errors
+
+## 11. Next Tasks (for next agent session)
+
+### v0.5.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
+- [ ] Move OCR inference into a dedicated Web Worker using Comlink (SPEC §2 requirement: "All heavy processing must run in Web Workers + Comlink")
+- [ ] Implement optional image preprocessing pipeline (SPEC §7.2): contrast enhancement, deskew, binarize using Native Canvas API
+- [ ] Wire preprocessing toggle from SettingsModalComponent to the processing pipeline
+- [ ] Add language selector state management (SettingsModalComponent → OcrService)
+
+### v0.6.0 — Enhanced UI Features (SPEC §5)
+- [ ] Multi-file support: handle multiple files in upload, show file list, switch between files
+- [ ] Editable HTML tables in Results Panel Tables tab (SPEC §5.6)
+- [ ] Markdown preview with rendered HTML using `marked` library (SPEC §5.6)
+- [ ] Theme toggle (light/dark mode) in navbar (SPEC §8)
+- [ ] Responsive/mobile-friendly layout collapse (SPEC §5.8)
+- [ ] Keyboard shortcuts for navigation (zoom, page switching)
+
+### v0.7.0 — IndexedDB + Performance (SPEC §2)
+- [ ] IndexedDB integration for caching OCR models (SPEC §2: "IndexedDB for cached models")
+- [ ] IndexedDB for recent files (SPEC §2: "IndexedDB for recent files")
+- [ ] Lazy-load heavy dependencies (onnxruntime-web, jspdf) for faster initial load
+- [ ] Performance: optimize large PDF rendering with viewport-based lazy page rendering
+
+### v1.0.0 — MVP Release (SPEC §5)
+- [ ] End-to-end testing of all features in SPEC §5
+- [ ] Production build optimization and bundle size audit
+- [ ] Deployment setup for static hosting (Vercel/Netlify/GitHub Pages) (SPEC §2)
+- [ ] README.md with usage instructions, screenshots, and deployment guide

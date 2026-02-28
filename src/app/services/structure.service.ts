@@ -175,18 +175,19 @@ export class StructureService {
 
     for (const el of elements) {
       if (el.type === 'paragraph' && current != null && current.type === 'paragraph') {
-        const gap = el.bbox.y - (current.bbox.y + current.bbox.height);
-        if (gap < 15 && Math.abs(el.bbox.x - current.bbox.x) < 20) {
+        const currentEl: DocumentElement = current;
+        const gap = el.bbox.y - (currentEl.bbox.y + currentEl.bbox.height);
+        if (gap < 15 && Math.abs(currentEl.bbox.x - el.bbox.x) < 20) {
           current = {
-            ...current as DocumentElement,
-            text: current.text + ' ' + el.text,
+            type: currentEl.type,
+            text: currentEl.text + ' ' + el.text,
             bbox: {
-              x: Math.min(current.bbox.x, el.bbox.x),
-              y: current.bbox.y,
-              width: Math.max(current.bbox.width, el.bbox.width),
-              height: (el.bbox.y + el.bbox.height) - current.bbox.y,
+              x: Math.min(currentEl.bbox.x, el.bbox.x),
+              y: currentEl.bbox.y,
+              width: Math.max(currentEl.bbox.width, el.bbox.width),
+              height: (el.bbox.y + el.bbox.height) - currentEl.bbox.y,
             },
-            confidence: (current.confidence + el.confidence) / 2,
+            confidence: (currentEl.confidence + el.confidence) / 2,
           };
           continue;
         }
