@@ -55,6 +55,8 @@ import { DocumentStructure, DocumentElement } from '../../models/document.models
   `,
 })
 export class DocumentViewerComponent {
+  private static readonly RENDER_SCALE = 1.5;
+
   ui = inject(UiService);
   pdfService = inject(PdfService);
 
@@ -72,7 +74,7 @@ export class DocumentViewerComponent {
       const page = this.activePage();
       const canvas = this.documentCanvas();
       if (canvas) {
-        this.pdfService.renderPage(page, canvas.nativeElement, 1.5);
+        this.pdfService.renderPage(page, canvas.nativeElement, DocumentViewerComponent.RENDER_SCALE);
       }
     });
 
@@ -122,7 +124,7 @@ export class DocumentViewerComponent {
       other: 'rgba(148, 163, 184, 0.4)',
     };
 
-    const scale = 1.5;
+    const scale = DocumentViewerComponent.RENDER_SCALE;
 
     for (const element of page.elements) {
       const { x, y, width, height } = element.bbox;
