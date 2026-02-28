@@ -125,8 +125,8 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.1.1  
-**Last updated:** 2026-02-28
+**Version:** 0.2.0  
+**Last updated:** 2025-07-14
 
 ### Completed (v0.1.0 — Project Skeleton)
 - [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
@@ -148,3 +148,10 @@ export interface Table {
 - [x] Upgraded Angular 18.2.14 → 19.2.19 to fix multiple security vulnerabilities (XSRF token leakage, XSS via SVG attributes, Stored XSS via SVG/MathML, i18n XSS — none had patches for v18)
 - [x] Updated TypeScript 5.5 → 5.7, zone.js 0.14 → 0.15 for Angular 19 compatibility
 - [x] Build passes with zero errors, no security advisories remaining
+
+### Completed (v0.2.0 — PdfService + Canvas Rendering)
+- [x] PdfService (`pdf.service.ts`) — loads PDFs via pdfjs-dist, loads images (PNG/JPG), renders pages to canvas at configurable scale, generates thumbnails (0.3x), extracts page dimensions, provides `getPageCanvas()` for downstream OCR pipeline
+- [x] angular.json updated: pdf.js worker (`pdf.worker.min.mjs`) and OCR model assets (`@gutenye/ocr-models`) copied to build/test output
+- [x] ThumbnailsSidebarComponent upgraded to render canvas-based thumbnails via PdfService
+- [x] DocumentViewerComponent upgraded: renders active page via PdfService, overlay canvas for bounding boxes, overlay toggle, page counter from PdfService.totalPages
+- [x] Build passes with zero errors

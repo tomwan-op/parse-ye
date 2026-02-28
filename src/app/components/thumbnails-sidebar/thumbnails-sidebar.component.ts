@@ -1,4 +1,5 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject, ElementRef, viewChildren, effect } from '@angular/core';
+import { PdfService } from '../../services/pdf.service';
 
 @Component({
   selector: 'app-thumbnails-sidebar',
@@ -18,8 +19,8 @@ import { Component, input, output } from '@angular/core';
             [class]="thumb.pageNumber === activePage() ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-700'"
             (click)="pageSelected.emit(thumb.pageNumber)"
           >
-            <div class="aspect-[3/4] bg-slate-800 flex items-center justify-center">
-              <span class="text-xs text-slate-500">Page {{ thumb.pageNumber }}</span>
+            <div class="aspect-[3/4] bg-slate-800 flex items-center justify-center overflow-hidden">
+              <canvas #thumbCanvas class="max-w-full max-h-full object-contain"></canvas>
             </div>
             <div class="bg-slate-800/50 px-2 py-1">
               <span class="text-[10px] text-slate-400">{{ thumb.pageNumber }}</span>
@@ -38,4 +39,21 @@ export class ThumbnailsSidebarComponent {
   thumbnails = input<{ pageNumber: number }[]>([]);
   activePage = input(1);
   pageSelected = output<number>();
+
+  private pdfService = inject(PdfService);
+  private thumbCanvases = viewChildren<ElementRef<HTMLCanvasElement>>('thumbCanvas');
+
+  constructor() {
+    effect(() => {
+      const canvases = this.thumbCanvases();
+      const thumbs = this.thumbnails();
+      if (canvases.length > 0 && thumbs.length > 0) {
+        canvases.forEach((canvasRef, index) => {
+          if (thumbs[index]) {
+            this.pdfService.renderThumbnail(thumbs[index].pageNumber, canvasRef.nativeElement);
+          }
+        });
+      }
+    });
+  }
 }
