@@ -1,5 +1,5 @@
 import { Component, inject, input, effect, viewChild, ElementRef, signal } from '@angular/core';
-import { UiService } from '../../services/ui.service';
+import { UiService, FitMode } from '../../services/ui.service';
 import { PdfService } from '../../services/pdf.service';
 import { DocumentStructure, DocumentElement } from '../../models/document.models';
 
@@ -7,48 +7,101 @@ import { DocumentStructure, DocumentElement } from '../../models/document.models
   selector: 'app-document-viewer',
   standalone: true,
   template: `
-    <div class="flex-1 flex flex-col overflow-hidden bg-slate-950">
-      <!-- Toolbar -->
-      <div class="flex items-center justify-between px-4 py-2 bg-slate-900/60 border-b border-slate-800">
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-slate-400">Zoom</span>
-          <button class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400" (click)="ui.zoomOut()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
-            </svg>
-          </button>
-          <span class="text-xs text-slate-300 w-12 text-center font-mono">{{ zoomPercent() }}%</span>
-          <button class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400" (click)="ui.zoomIn()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
-            </svg>
-          </button>
-          <button class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400" (click)="ui.resetZoom()">
-            Reset
-          </button>
-        </div>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" class="toggle toggle-xs toggle-primary" [checked]="overlaysVisible()" (change)="toggleOverlays()" />
-            <span class="text-xs text-slate-400">Overlays</span>
-          </label>
-          <div class="text-xs text-slate-500">
-            Page {{ activePage() }} of {{ pdfService.totalPages() }}
-          </div>
-        </div>
-      </div>
-
+    <div class="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
       <!-- Canvas area -->
       <div class="flex-1 overflow-auto flex items-center justify-center p-4">
         <div
           class="relative rounded-lg shadow-2xl shadow-black/50"
-          [style.transform]="'scale(' + ui.currentZoom() + ')'"
+          [style.transform]="ui.fitMode() === 'original' ? 'scale(' + ui.currentZoom() + ')' : undefined"
+          [style.max-width]="ui.fitMode() === 'fit-width' ? '100%' : undefined"
+          [style.max-height]="ui.fitMode() === 'fit-height' ? '100%' : undefined"
           style="transform-origin: center center; transition: transform 0.2s ease;"
         >
-          <canvas #documentCanvas class="block rounded-lg"></canvas>
+          <canvas
+            #documentCanvas
+            class="block rounded-lg"
+            [style.max-width]="ui.fitMode() === 'fit-width' ? '100%' : undefined"
+            [style.max-height]="ui.fitMode() === 'fit-height' ? '100%' : undefined"
+            [style.height]="ui.fitMode() === 'fit-height' ? 'auto' : undefined"
+            [style.width]="ui.fitMode() === 'fit-width' ? 'auto' : undefined"
+            [class.object-contain]="ui.fitMode() !== 'original'"
+          ></canvas>
           @if (overlaysVisible()) {
-            <canvas #overlayCanvas class="absolute top-0 left-0 pointer-events-none rounded-lg"></canvas>
+            <canvas
+              #overlayCanvas
+              class="absolute top-0 left-0 pointer-events-none rounded-lg"
+              [style.max-width]="ui.fitMode() === 'fit-width' ? '100%' : undefined"
+              [style.max-height]="ui.fitMode() === 'fit-height' ? '100%' : undefined"
+              [style.height]="ui.fitMode() === 'fit-height' ? 'auto' : undefined"
+              [style.width]="ui.fitMode() === 'fit-width' ? 'auto' : undefined"
+              [class.object-contain]="ui.fitMode() !== 'original'"
+            ></canvas>
           }
+        </div>
+      </div>
+
+      <!-- Floating controls -->
+      <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-slate-900/90 backdrop-blur-sm border border-slate-700 rounded-xl px-3 py-1.5 shadow-xl z-10">
+        <!-- Fit mode buttons -->
+        <button
+          class="btn btn-ghost btn-xs px-2"
+          [class]="ui.fitMode() === 'fit-width' ? 'text-indigo-400' : 'text-slate-400 hover:text-indigo-400'"
+          (click)="ui.setFitMode('fit-width')"
+          title="Fit to width"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+          </svg>
+        </button>
+        <button
+          class="btn btn-ghost btn-xs px-2"
+          [class]="ui.fitMode() === 'fit-height' ? 'text-indigo-400' : 'text-slate-400 hover:text-indigo-400'"
+          (click)="ui.setFitMode('fit-height')"
+          title="Fit to height"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 3.75H6A2.25 2.25 0 003.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0120.25 6v1.5M16.5 20.25H18A2.25 2.25 0 0020.25 18v-1.5M7.5 20.25H6A2.25 2.25 0 013.75 18v-1.5" />
+          </svg>
+        </button>
+
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+
+        <!-- Zoom controls -->
+        <button class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400 px-2" (click)="ui.zoomOut()" title="Zoom out">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+          </svg>
+        </button>
+        <span class="text-[11px] text-slate-300 w-10 text-center font-mono select-none">{{ zoomPercent() }}%</span>
+        <button class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400 px-2" (click)="ui.zoomIn()" title="Zoom in">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
+          </svg>
+        </button>
+        <button
+          class="btn btn-ghost btn-xs text-slate-400 hover:text-indigo-400 px-2"
+          [class]="ui.fitMode() === 'original' && ui.currentZoom() === 1 ? 'text-indigo-400' : 'text-slate-400 hover:text-indigo-400'"
+          (click)="ui.resetZoom()"
+          title="Reset zoom / Fit to width"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
+          </svg>
+        </button>
+
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+
+        <!-- Overlays toggle -->
+        <label class="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" class="toggle toggle-xs toggle-primary" [checked]="overlaysVisible()" (change)="toggleOverlays()" />
+          <span class="text-[11px] text-slate-400">Overlays</span>
+        </label>
+
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+
+        <!-- Page counter -->
+        <div class="text-[11px] text-slate-500 whitespace-nowrap">
+          {{ activePage() }} / {{ pdfService.totalPages() }}
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@ import { UiService } from '../../services/ui.service';
       <!-- Left: Logo + sidebar toggle -->
       <div class="flex items-center gap-3">
         <button
-          class="btn btn-ghost btn-sm text-slate-400 hover:text-indigo-400"
+          class="btn btn-ghost btn-sm text-slate-400 hover:text-indigo-400 lg:flex hidden"
           (click)="ui.toggleSidebar()"
           title="Toggle sidebar"
         >
@@ -17,51 +17,82 @@ import { UiService } from '../../services/ui.service';
             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        <div class="flex items-center gap-2">
+        <!-- Mobile hamburger toggle for sidebar -->
+        <button
+          class="btn btn-ghost btn-sm text-slate-400 hover:text-indigo-400 lg:hidden flex"
+          (click)="ui.toggleSidebar()"
+          title="Toggle sidebar"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        <button class="flex items-center gap-2 hover:opacity-80 transition-opacity" (click)="clearClicked.emit()" title="Reset to empty state">
           <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
             <span class="text-white text-xs font-bold">P</span>
           </div>
-          <span class="text-base font-semibold text-slate-100 tracking-tight">ParseYe</span>
-        </div>
+          <span class="text-base font-semibold text-slate-100 tracking-tight hidden sm:inline">ParseYe</span>
+        </button>
       </div>
 
-      <!-- Center: Upload + Process -->
+      <!-- Center: Upload + New + Process -->
       <div class="flex items-center gap-2">
-        <button class="btn btn-sm bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600 gap-2" (click)="uploadClicked.emit()">
+        <button class="btn btn-sm bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:border-slate-600 hover:text-slate-100 gap-2" (click)="uploadClicked.emit()">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
           </svg>
-          Upload
+          <span class="hidden sm:inline">Upload</span>
         </button>
-        <button
-          class="btn btn-sm btn-primary gap-2"
-          [disabled]="!hasDocument() || isProcessing()"
-          (click)="processClicked.emit()"
-        >
-          @if (isProcessing()) {
-            <span class="loading loading-spinner loading-xs"></span>
-            Processing...
-          } @else {
+        @if (hasDocument()) {
+          <button
+            class="btn btn-sm btn-ghost text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            (click)="clearClicked.emit()"
+            title="Clear document"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
-            Process
+            <span class="hidden sm:inline">New</span>
+          </button>
+        }
+        <div class="relative group">
+          <button
+            class="btn btn-sm btn-primary gap-2 hover:bg-indigo-500 hover:border-indigo-500"
+            [disabled]="!hasDocument() || isProcessing()"
+            (click)="processClicked.emit()"
+            [title]="!hasDocument() ? 'Upload a document first' : isProcessing() ? 'Processing...' : 'Process document'"
+          >
+            @if (isProcessing()) {
+              <span class="loading loading-spinner loading-xs"></span>
+              <span class="hidden sm:inline">Processing...</span>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+              </svg>
+              <span class="hidden sm:inline">Process</span>
+            }
+          </button>
+          @if (!hasDocument() && !isProcessing()) {
+            <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-slate-800 text-slate-400 text-[10px] px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              Upload a document first
+            </div>
           }
-        </button>
+        </div>
       </div>
 
-      <!-- Right: Settings + Export + Results toggle -->
+      <!-- Right: Export + Settings + Results toggle -->
       <div class="flex items-center gap-1">
         <div class="dropdown dropdown-end">
           <button
             tabindex="0"
             class="btn btn-ghost btn-sm text-slate-400 hover:text-emerald-400 gap-1"
             [class.btn-disabled]="!hasResults()"
+            [title]="!hasResults() ? 'Process a document first' : 'Export results'"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
-            Export
+            <span class="hidden sm:inline">Export</span>
           </button>
           @if (hasResults()) {
             <ul tabindex="0" class="dropdown-content menu bg-slate-800 border border-slate-700 rounded-xl p-2 w-48 shadow-xl mt-2 z-50">
@@ -74,7 +105,7 @@ import { UiService } from '../../services/ui.service';
         </div>
 
         <button
-          class="btn btn-ghost btn-sm text-slate-400 hover:text-indigo-400"
+          class="btn btn-ghost btn-sm text-slate-400 hover:text-indigo-400 hidden sm:flex"
           (click)="ui.toggleSettings()"
           title="Settings"
         >
@@ -102,6 +133,7 @@ export class NavbarComponent {
   uploadClicked = output<void>();
   processClicked = output<void>();
   exportClicked = output<string>();
+  clearClicked = output<void>();
   hasDocument = input(false);
   isProcessing = input(false);
   hasResults = input(false);
