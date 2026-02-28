@@ -125,7 +125,7 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.1.0  
+**Version:** 0.1.1  
 **Last updated:** 2026-02-28
 
 ### Completed (v0.1.0 — Project Skeleton)
@@ -143,3 +143,8 @@ export interface Table {
 - [x] SettingsModalComponent (language selector, preprocessing toggle)
 - [x] AppComponent wired with layout: navbar + sidebar + viewer/upload + results panel + settings modal
 - [x] Build passes with zero errors
+
+### Completed (v0.1.1 — Security Upgrade)
+- [x] Upgraded Angular 18.2.14 → 19.2.19 to fix multiple security vulnerabilities (XSRF token leakage, XSS via SVG attributes, Stored XSS via SVG/MathML, i18n XSS — none had patches for v18)
+- [x] Updated TypeScript 5.5 → 5.7, zone.js 0.14 → 0.15 for Angular 19 compatibility
+- [x] Build passes with zero errors, no security advisories remaining
