@@ -222,6 +222,25 @@ import { DocumentStructure, DocumentType, HkbrData, ResultTab } from '../../mode
               @case ('json') {
                 <pre class="text-[10px] text-emerald-400 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 leading-relaxed overflow-x-auto">{{ jsonOutput() }}</pre>
               }
+              @case ('debug') {
+                <div class="space-y-4">
+                  @if (rawPageOutputs().length === 0) {
+                    <div class="text-center py-8">
+                      <p class="text-sm text-slate-400">No debug data yet.</p>
+                      <p class="text-xs text-slate-500 mt-1">Process a document to see raw model output here.</p>
+                    </div>
+                  } @else {
+                    @for (raw of rawPageOutputs(); track $index) {
+                      <div>
+                        @if (rawPageOutputs().length > 1) {
+                          <div class="text-xs font-semibold text-slate-400 mb-1 px-1">Page {{ $index + 1 }}</div>
+                        }
+                        <pre class="text-[10px] text-amber-300 font-mono whitespace-pre-wrap bg-slate-800/50 rounded-lg p-3 leading-relaxed overflow-x-auto max-h-96">{{ raw }}</pre>
+                      </div>
+                    }
+                  }
+                </div>
+              }
             }
           }
         </div>
@@ -237,6 +256,7 @@ export class ResultsPanelComponent {
   documentStructure = input<DocumentStructure | null>(null);
   documentType = input<DocumentType>('OTHER');
   hkbrData = input<HkbrData | null>(null);
+  rawPageOutputs = input<string[]>([]);
 
   // Local editable copy of HKBR data
   readonly editHkbr = signal<HkbrData>({
@@ -268,6 +288,7 @@ export class ResultsPanelComponent {
     { id: 'tables', label: 'Tables' },
     { id: 'markdown', label: 'Markdown' },
     { id: 'json', label: 'JSON' },
+    { id: 'debug', label: 'Debug' },
   ];
 
   totalElements = computed(() => {

@@ -44,7 +44,7 @@ export interface ProcessingProgress {
   percent: number;
 }
 
-export type ResultTab = 'overlay' | 'tree' | 'tables' | 'markdown' | 'json';
+export type ResultTab = 'overlay' | 'tree' | 'tables' | 'markdown' | 'json' | 'debug';
 
 export type DocumentType = 'HKBR' | 'OTHER';
 

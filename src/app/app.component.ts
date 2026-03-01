@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, viewChild, ElementRef } from '@angul
 import { BrowserSupportService } from './services/browser-support.service';
 import { UiService } from './services/ui.service';
 import { PdfService } from './services/pdf.service';
-import { OcrService } from './services/ocr.service';
+import { OcrService, OcrLine } from './services/ocr.service';
 import { StructureService } from './services/structure.service';
 import { ExportService } from './services/export.service';
 import { HkbrParserService } from './services/hkbr-parser.service';
@@ -49,6 +49,7 @@ export class AppComponent implements OnInit {
   readonly isProcessing = signal(false);
   readonly documentType = signal<DocumentType>('OTHER');
   readonly hkbrData = signal<HkbrData | null>(null);
+  readonly rawPageOutputs = signal<string[]>([]);
   readonly supportedUploadAccept = SUPPORTED_UPLOAD_ACCEPT;
 
   private hiddenFileInput = viewChild<ElementRef<HTMLInputElement>>('hiddenFileInput');
@@ -108,6 +109,11 @@ export class AppComponent implements OnInit {
     const pages = this.pdfService.pages();
     const totalPages = pages.length;
     const processedPages: Page[] = [];
+    const rawPageOutputs: string[] = [];
+
+    // Maximum canvas side length passed to OCR — must match OcrService.MAX_INFERENCE_DIMENSION
+    // so the prepareCanvasForInference shortcut is always taken (avoids creating an extra canvas).
+    const MAX_OCR_CANVAS_SIDE = OcrService.MAX_INFERENCE_DIMENSION;
 
     try {
       this.ui.updateProgress({
@@ -130,7 +136,11 @@ export class AppComponent implements OnInit {
           message: `Rendering page ${pageNum}...`,
           percent: 10 + ((i / totalPages) * 80) * 0.1,
         });
-        const canvas = await this.pdfService.getPageCanvas(pageNum, 1.0);
+
+        // Cap canvas size to MAX_OCR_CANVAS_SIDE to prevent OOM on large images.
+        const maxSide = Math.max(pageData.width, pageData.height);
+        const canvasScale = maxSide > MAX_OCR_CANVAS_SIDE ? MAX_OCR_CANVAS_SIDE / maxSide : 1.0;
+        const canvas = await this.pdfService.getPageCanvas(pageNum, canvasScale);
 
         this.ui.updateProgress({
           status: 'recognizing',
@@ -139,7 +149,26 @@ export class AppComponent implements OnInit {
           message: `Recognizing text on page ${pageNum}...`,
           percent: 10 + ((i / totalPages) * 80) * 0.5,
         });
-        const ocrLines = await this.ocrService.detectFromCanvas(canvas);
+
+        // Use PDF.js text layer extraction for PDFs; fall back to Donut for images
+        // or scanned PDFs that have no embedded text.
+        const pdfLines = await this.pdfService.extractTextLines(pageNum);
+        let ocrLines: OcrLine[];
+        let rawOutput: string;
+
+        if (pdfLines !== null) {
+          ocrLines = pdfLines;
+          const MAX_DEBUG_LINES = 50;
+          rawOutput =
+            `[PDF text layer: ${pdfLines.length} line(s)]\n` +
+            JSON.stringify(pdfLines.slice(0, MAX_DEBUG_LINES), null, 2) +
+            (pdfLines.length > MAX_DEBUG_LINES ? `\n... (${pdfLines.length - MAX_DEBUG_LINES} more lines)` : '');
+        } else {
+          ocrLines = await this.ocrService.detectFromCanvas(canvas);
+          rawOutput = this.ocrService.lastRawDonutOutput();
+        }
+
+        rawPageOutputs.push(rawOutput);
 
         this.ui.updateProgress({
           status: 'structuring',
@@ -163,6 +192,7 @@ export class AppComponent implements OnInit {
       };
 
       this.documentStructure.set(structure);
+      this.rawPageOutputs.set(rawPageOutputs);
 
       if (this.documentType() === 'HKBR') {
         const parsed = this.hkbrParser.parse(structure);
@@ -203,6 +233,7 @@ export class AppComponent implements OnInit {
     this.activePage.set(1);
     this.documentStructure.set(null);
     this.hkbrData.set(null);
+    this.rawPageOutputs.set([]);
     this.isProcessing.set(false);
     this.ui.resetProgress();
     this.ui.sidebarOpen.set(false);

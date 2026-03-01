@@ -10,13 +10,14 @@ export interface OcrLine {
 export class OcrService {
   readonly isModelLoaded = signal(false);
   readonly isModelLoading = signal(false);
+  readonly lastRawDonutOutput = signal('');
 
   private pipeline: any = null;
 
   private static readonly MODEL_ID = 'Xenova/donut-base-finetuned-cord-v2';
   private static readonly SYNTHETIC_CONFIDENCE = 0.8;
   private static readonly BBOX_MARGIN = 10;
-  private static readonly MAX_INFERENCE_DIMENSION = 1600;
+  static readonly MAX_INFERENCE_DIMENSION = 1600;
 
   async ensureModel(): Promise<void> {
     if (this.pipeline) return;
@@ -42,6 +43,7 @@ export class OcrService {
     const imageDataUrl = inferenceCanvas.toDataURL('image/png');
     const result = await this.pipeline(imageDataUrl);
     const rawText: string = result?.[0]?.generated_text ?? '';
+    this.lastRawDonutOutput.set(rawText);
     const lines = this.parseDonutOutput(rawText, inferenceCanvas.width, inferenceCanvas.height);
 
     if (scaleX === 1 && scaleY === 1) {

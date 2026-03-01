@@ -155,14 +155,19 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.6  
+**Version:** 0.8.0  
 **Last updated:** 2026-03-01
 
-### Completed (v0.7.6 — Image Stability + Donut Extraction Robustness)
-- [x] DocumentViewer now applies adaptive render scaling for large pages/images (caps max rendered side) to reduce canvas memory pressure during image workflows and prevent browser reload/crash behavior
-- [x] Overlay drawing scale now derives from rendered canvas width vs source page width so bbox overlays remain aligned when adaptive scaling is used
-- [x] OcrService Donut parser now tolerates inline helper tags inside value tags (e.g. `<sep/>`) and extracts segment text before plain-text fallback, improving text recovery on tricky receipt/PDF outputs
-- [x] Added focused unit test for inline helper-tag extraction path in `ocr.service.spec.ts`
+### Completed (v0.8.0 — Image Stability, PDF Text Extraction, Debug Panel)
+- [x] Fixed image processing causing browser reload/OOM crash: `processDocument` now caps the OCR canvas to `OcrService.MAX_INFERENCE_DIMENSION` (1600px max side) before passing to `detectFromCanvas`, preventing allocation of a large image canvas that was causing memory exhaustion on mobile browsers
+- [x] `OcrService.MAX_INFERENCE_DIMENSION` made public static so `AppComponent` can reference it as a single source of truth (avoids diverging magic numbers)
+- [x] Added `OcrService.lastRawDonutOutput` signal that stores the raw Donut-generated text after each `detectFromCanvas` call, enabling per-page debug capture
+- [x] Added `PdfService.extractTextLines(pageNumber)`: uses PDF.js `page.getTextContent()` to extract text with bounding boxes from text-layer PDFs; groups items into visual lines by baseline Y (3-point threshold); converts PDF coordinate system (bottom-left origin) to our coordinate system (top-left origin); returns `null` for non-PDFs and empty/image-only pages to allow graceful Donut fallback
+- [x] `AppComponent.processDocument` now uses PDF text layer extraction first for PDFs, then falls back to Donut OCR for images or scanned PDFs without a text layer — fixes the issue where Donut produced garbage output for text-based PDFs
+- [x] Added `AppComponent.rawPageOutputs` signal (`string[]`) that accumulates per-page raw debug strings (PDF layer JSON or Donut generated text); reset in `clearDocument()`
+- [x] Added `'debug'` to `ResultTab` union type in `document.models.ts`
+- [x] `ResultsPanelComponent`: added `rawPageOutputs` input; added "Debug" tab (6th tab) showing per-page raw model output or PDF text-layer data in amber monospace; empty-state message when no data yet
+- [x] `app.component.html`: passes `rawPageOutputs` to `<app-results-panel>`
 - [x] Build and tests pass with zero errors
 
 ### Completed (v0.7.5 — Donut Nested-Tag Text Extraction Fix)
