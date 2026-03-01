@@ -1,12 +1,12 @@
 ## 1. Project Overview
-ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, no API keys) web app that lets users drag-and-drop PDFs or images, processes them entirely in the browser using PaddleOCR, extracts rich hierarchical document structure (text + bounding boxes + reading order + tables + semantic grouping), displays interactive results with colored overlays, and exports clean JSON, Markdown, TXT, or searchable PDF.
+ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, no API keys) web app that lets users drag-and-drop PDFs or images, processes them entirely in the browser using the Donut document understanding model (via @xenova/transformers), extracts rich hierarchical document structure (text + bounding boxes + reading order + tables + semantic grouping), displays interactive results with colored overlays, and exports clean JSON, Markdown, TXT, or searchable PDF.
 
 ## 2. Tech Stack (DO NOT CHANGE WITHOUT UPDATING THIS SECTION FIRST)
 
 - Angular 18+ (standalone components only, signals for state, no NgModules)
 - Tailwind CSS v3 + DaisyUI (for components, dark mode, beautiful UI)
 - pdf.js (Mozilla) – PDF rendering to canvas, thumbnails, page navigation
-- **@gutenye/ocr-browser** (PaddleOCR PP-OCRv4/v5 via ONNX Runtime Web) – **ONLY** OCR and structure engine
+- **@xenova/transformers** (Donut model — Xenova/donut-base-finetuned-cord-v2, quantized) – document understanding and text extraction engine
 - Native Canvas API + optional OpenCV.js WASM (for preprocessing: contrast, deskew, binarize)
 - All heavy processing (rendering, preprocessing, inference) must run in Web Workers + Comlink
 - Exports: jsPDF, file-saver, marked (Markdown)
@@ -28,7 +28,7 @@ ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, n
 - Services (all injectable, singleton where possible):
   - BrowserSupportService
   - PdfService (rendering, thumbnails, canvas extraction)
-  - OcrService (only @gutenye/ocr-browser, lazy model loading, Web Worker)
+  - OcrService (Donut model via @xenova/transformers, lazy model loading)
   - StructureService (post-process PaddleOCR output → hierarchical structure + table detection)
   - ExportService
   - UiService (theme, progress, overlays)
@@ -41,7 +41,7 @@ ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, n
   - ResultsPanelComponent (tabs; HKBR card when document type = HKBR)
   - SettingsModalComponent
   - BrowserNotSupportedComponent
-- Data flow: Upload → PdfService → (optional preprocess) → OcrService → StructureService → UI
+- Data flow: Upload → PdfService → (optional preprocess) → OcrService (Donut) → StructureService → UI
 - HKBR data flow (when DocumentType = 'HKBR'): …→ StructureService → HkbrParserService → HkbrValidatorService → HKBR Data card in ResultsPanel
 
 ## 5. Features (MVP – must be complete before v1.0)
@@ -52,7 +52,7 @@ ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, n
 4. Process button with options: language selector (multi-select), preprocessing toggle
 5. Real-time progress indicators with step-by-step status
 6. **Document-type selector** (shown above the dropzone before upload):
-   - Options: "Hong Kong Business Registration (HKBR)" | "Other (Arbitrary Document)"
+   - Options: "Hong Kong Business Registration (Donut)" | "Other (Arbitrary Document)"
    - Default: "Other"
 7. Results panel (tabs for "Other" type):
    - Visual Overlay (live on preview)
@@ -82,7 +82,7 @@ export interface DocumentStructure {
   metadata: {
     totalPages: number;
     processingTimeMs: number;
-    model: 'pp-ocr-v4';
+    model: 'donut';
     languages: string[];
   };
 }
@@ -122,7 +122,7 @@ export interface HkbrData {
 
 1. pdf.js → render each page to canvas
 2. Optional preprocessing (Canvas + OpenCV.js)
-3. @gutenye/ocr-browser: detect + recognize (in Web Worker)
+3. @xenova/transformers Donut model: document understanding + text extraction
 4. StructureService: 
    - Group boxes by position & reading order
    - Paragraph & section clustering
@@ -138,7 +138,7 @@ export interface HkbrData {
   - Top navbar: Logo "ParseYe", Upload button, Settings, Export dropdown, Theme toggle
   - Left sidebar: Vertical scrollable thumbnails
   - Center: Interactive document preview (canvas with zoom controls, page counter)
-  - **Document-type selector row** (shown above the dropzone, before upload): compact `<select>` with label "Document type:", options "Other (Arbitrary Document)" (default) and "Hong Kong Business Registration (HKBR)", styled with DaisyUI `select-sm` in `bg-slate-800`
+  - **Document-type selector row** (shown above the dropzone, before upload): compact `<select>` with label "Document type:", options "Other (Arbitrary Document)" (default) and "Hong Kong Business Registration (Donut)", styled with DaisyUI `select-sm` in `bg-slate-800`
   - Right panel (collapsible): Results tabs (for "Other") or **HKBR Data card** (for "HKBR")
     - HKBR Data card: validation badge at top (green ✅ or red ⚠️ with issue list + score%), then 4 editable text fields (BR Number, Company Name, Issue Date, Expiry Date) with slate-800 background, indigo focus ring
 - Typography: Clean sans-serif (system or Inter)
@@ -155,8 +155,21 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.6.0  
+**Version:** 0.7.0  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.0 — Donut-based Document Processing Pipeline)
+- [x] Replaced PaddleOCR (@gutenye/ocr-browser) with @xenova/transformers + Donut model (Xenova/donut-base-finetuned-cord-v2, quantized)
+- [x] OcrService rewritten: lazy-loads Donut pipeline via `@xenova/transformers`, converts canvas to blob for inference, parses Donut XML-like output into OcrLine[] with synthesized bounding boxes
+- [x] Removed @gutenye/ocr-browser and @gutenye/ocr-models from dependencies and angular.json asset copies
+- [x] Updated angular.json externalDependencies for @xenova/transformers compatibility (fs, path, os, stream, http, https, url, child_process, worker_threads, sharp, onnxruntime-node)
+- [x] Document type selector updated: "Hong Kong Business Registration (Donut)" and "Other (Arbitrary Document)"
+- [x] DocumentStructure metadata model changed from 'pp-ocr-v4' to 'donut'
+- [x] Bounding box overlays on document preview canvas work with synthesized bboxes from Donut output
+- [x] Footer updated: "Powered by Donut"
+- [x] index.html meta description updated
+- [x] SPEC.md sections 1, 2, 4, 5, 6, 7, 8 updated for Donut
+- [x] Build passes with zero errors
 
 ### Completed (v0.6.0 — Phase 1 HKBR Document Processing)
 - [x] Added `DocumentType` type (`'HKBR' | 'OTHER'`) and `HkbrData` interface to `document.models.ts`

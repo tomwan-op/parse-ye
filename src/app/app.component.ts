@@ -155,7 +155,7 @@ export class AppComponent implements OnInit {
         metadata: {
           totalPages,
           processingTimeMs: Math.round(performance.now() - startTime),
-          model: 'pp-ocr-v4',
+          model: 'donut',
           languages: ['en'],
         },
       };

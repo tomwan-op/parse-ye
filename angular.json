@@ -54,11 +54,6 @@
                 "glob": "pdf.worker.min.mjs",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/assets/"
-              },
-              {
-                "glob": "**/*",
-                "input": "node_modules/@gutenye/ocr-models/assets",
-                "output": "/assets/ocr-models/"
               }
             ],
             "styles": [
@@ -67,7 +62,18 @@
             "scripts": [],
             "externalDependencies": [
               "fs",
-              "path"
+              "path",
+              "os",
+              "stream",
+              "http",
+              "https",
+              "url",
+              "child_process",
+              "worker_threads",
+              "sharp",
+              "onnxruntime-node",
+              "node:fs",
+              "node:path"
             ]
           },
           "configurations": {
@@ -127,11 +133,6 @@
                 "glob": "pdf.worker.min.mjs",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/assets/"
-              },
-              {
-                "glob": "**/*",
-                "input": "node_modules/@gutenye/ocr-models/assets",
-                "output": "/assets/ocr-models/"
               }
             ],
             "styles": [

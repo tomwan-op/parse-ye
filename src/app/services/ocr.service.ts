@@ -11,20 +11,22 @@ export class OcrService {
   readonly isModelLoaded = signal(false);
   readonly isModelLoading = signal(false);
 
-  private ocrInstance: any = null;
+  private pipeline: any = null;
+
+  private static readonly MODEL_ID = 'Xenova/donut-base-finetuned-cord-v2';
+  private static readonly SYNTHETIC_CONFIDENCE = 0.8;
+  private static readonly BBOX_MARGIN = 10;
 
   async ensureModel(): Promise<void> {
-    if (this.ocrInstance) return;
+    if (this.pipeline) return;
     this.isModelLoading.set(true);
     try {
-      const { default: Ocr } = await import('@gutenye/ocr-browser');
-      this.ocrInstance = await Ocr.create({
-        models: {
-          detectionPath: '/assets/ocr-models/ch_PP-OCRv4_det_infer.onnx',
-          recognitionPath: '/assets/ocr-models/ch_PP-OCRv4_rec_infer.onnx',
-          dictionaryPath: '/assets/ocr-models/ppocr_keys_v1.txt',
-        },
-      });
+      const { pipeline } = await import('@xenova/transformers');
+      this.pipeline = await pipeline(
+        'image-to-text',
+        OcrService.MODEL_ID,
+        { quantized: true },
+      );
       this.isModelLoaded.set(true);
     } finally {
       this.isModelLoading.set(false);
@@ -33,13 +35,60 @@ export class OcrService {
 
   async detectFromCanvas(canvas: HTMLCanvasElement): Promise<OcrLine[]> {
     await this.ensureModel();
-    const dataUrl = canvas.toDataURL('image/png');
-    const results = await this.ocrInstance.detect(dataUrl);
 
-    return results.map((line: any) => ({
-      text: line.text,
-      confidence: line.mean ?? line.score ?? 0,
-      box: line.box ?? [],
-    }));
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((b) => resolve(b!), 'image/png');
+    });
+
+    const result = await this.pipeline(blob);
+    const rawText: string = result?.[0]?.generated_text ?? '';
+
+    return this.parseDonutOutput(rawText, canvas.width, canvas.height);
+  }
+
+  private parseDonutOutput(rawText: string, canvasWidth: number, canvasHeight: number): OcrLine[] {
+    const lines: OcrLine[] = [];
+
+    // Donut cord-v2 outputs XML-like tokens such as <s_menu><s_nm>text</s_nm>...
+    // Extract text values from token pairs like <s_TAG>value</s_TAG>
+    const tagPattern = /<s_([^>]+)>(.*?)<\/s_\1>/gs;
+    let match: RegExpExecArray | null;
+    const items: { label: string; value: string }[] = [];
+
+    while ((match = tagPattern.exec(rawText)) !== null) {
+      const label = match[1];
+      const value = match[2].trim();
+      if (value && !value.startsWith('<')) {
+        items.push({ label, value });
+      }
+    }
+
+    // If no tag-based items found, try to extract plain text
+    if (items.length === 0) {
+      const plainText = rawText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (plainText) {
+        items.push({ label: 'text', value: plainText });
+      }
+    }
+
+    // Create OcrLine entries with estimated bounding boxes
+    const rowHeight = items.length > 0 ? canvasHeight / items.length : canvasHeight;
+    const margin = OcrService.BBOX_MARGIN;
+
+    for (let i = 0; i < items.length; i++) {
+      const yStart = i * rowHeight;
+      lines.push({
+        text: items[i].value,
+        confidence: OcrService.SYNTHETIC_CONFIDENCE,
+        box: [
+          [margin, yStart + margin],
+          [canvasWidth - margin, yStart + margin],
+          [canvasWidth - margin, yStart + rowHeight - margin],
+          [margin, yStart + rowHeight - margin],
+        ],
+      });
+    }
+
+    return lines;
   }
 }

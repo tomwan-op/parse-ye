@@ -29,7 +29,7 @@ export interface DocumentStructure {
   metadata: {
     totalPages: number;
     processingTimeMs: number;
-    model: 'pp-ocr-v4';
+    model: 'donut';
     languages: string[];
   };
 }
