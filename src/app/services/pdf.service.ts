@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
+import { OcrLine } from './ocr.service';
 
 // Set the worker source relative to the document base URI so it works
 // both on localhost and when deployed to a sub-path (e.g. GitHub Pages).
@@ -129,6 +130,102 @@ export class PdfService {
     const canvas = document.createElement('canvas');
     await this.renderPage(pageNumber, canvas, scale);
     return canvas;
+  }
+
+  /**
+   * Extract text lines from a PDF page using the built-in text layer.
+   * Returns null when the document is not a PDF or the page has no text content
+   * (e.g. a scanned image PDF), so callers can fall back to OCR.
+   */
+  async extractTextLines(pageNumber: number): Promise<OcrLine[] | null> {
+    if (!this.pdfDocument) return null;
+
+    const page = await this.pdfDocument.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 1 });
+    const textContent = await page.getTextContent();
+
+    // PDF.js transform matrix layout: [a, b, c, d, tx, ty]
+    // tx (index 4) = X position in PDF user-space (origin bottom-left)
+    // ty (index 5) = Y baseline in PDF user-space (Y increases upward)
+    interface PdfTextItem {
+      str: string;
+      transform: number[];
+      width: number;
+      height: number;
+    }
+    const TX = 4; // transform index for X position
+    const TY = 5; // transform index for Y baseline
+
+    // Filter to actual text items (TextMarkedContent lacks a `str` field)
+    const textItems = (textContent.items as PdfTextItem[]).filter(
+      (item) => typeof item.str === 'string' && item.str.trim().length > 0,
+    );
+
+    if (textItems.length === 0) return null;
+
+    // Group items into visual lines by similar PDF baseline Y.
+    // 3 PDF points is narrow enough to separate adjacent lines yet tolerant
+    // of minor baseline jitter within the same line.
+    const Y_THRESHOLD = 3;
+    const lineMap = new Map<number, PdfTextItem[]>();
+    for (const item of textItems) {
+      const py = item.transform[TY];
+      let bucket: number | undefined;
+      for (const key of lineMap.keys()) {
+        if (Math.abs(key - py) <= Y_THRESHOLD) {
+          bucket = key;
+          break;
+        }
+      }
+      if (bucket === undefined) {
+        lineMap.set(py, [item]);
+      } else {
+        lineMap.get(bucket)!.push(item);
+      }
+    }
+
+    // Descending PDF-y order = top-to-bottom in viewport
+    const sortedBuckets = Array.from(lineMap.entries()).sort((a, b) => b[0] - a[0]);
+    const lines: OcrLine[] = [];
+
+    for (const [, lineItems] of sortedBuckets) {
+      const sorted = [...lineItems].sort((a, b) => a.transform[TX] - b.transform[TX]);
+
+      // Combine words; insert a space where items are not adjacent
+      let combined = '';
+      let prevRight = -1;
+      for (const item of sorted) {
+        const itemX = item.transform[TX];
+        if (prevRight >= 0 && itemX - prevRight > 1) combined += ' ';
+        combined += item.str;
+        prevRight = itemX + (item.width || 0);
+      }
+      combined = combined.replace(/\s+/g, ' ').trim();
+      if (!combined) continue;
+
+      // Compute combined bounding box in our coordinate system (top-left origin)
+      const minX = sorted[0].transform[TX];
+      const last = sorted[sorted.length - 1];
+      const maxX = last.transform[TX] + (last.width || 0);
+      const h = Math.max(...sorted.map((it) => it.height || 12), 8);
+      const pdfBaseline = sorted[0].transform[TY];
+      // PDF baseline is the bottom of most characters; text extends h units above it.
+      // Convert to top-left origin: topY = viewportHeight - baseline - height
+      const topY = viewport.height - pdfBaseline - h;
+
+      lines.push({
+        text: combined,
+        confidence: 1.0,
+        box: [
+          [minX, topY],
+          [maxX, topY],
+          [maxX, topY + h],
+          [minX, topY + h],
+        ],
+      });
+    }
+
+    return lines.length > 0 ? lines : null;
   }
 
   reset(): void {
