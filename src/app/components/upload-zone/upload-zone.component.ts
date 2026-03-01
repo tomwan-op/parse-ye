@@ -1,4 +1,9 @@
 import { Component, output, signal } from '@angular/core';
+import {
+  SUPPORTED_UPLOAD_ACCEPT,
+  SUPPORTED_UPLOAD_EXTENSIONS,
+  SUPPORTED_UPLOAD_MIME_TYPES,
+} from '../../constants/upload.constants';
 
 @Component({
   selector: 'app-upload-zone',
@@ -35,7 +40,7 @@ import { Component, output, signal } from '@angular/core';
           #fileInput
           type="file"
           class="sr-only"
-          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+          [attr.accept]="supportedUploadAccept"
           multiple
           (change)="onFileSelected($event)"
         />
@@ -46,12 +51,7 @@ import { Component, output, signal } from '@angular/core';
 export class UploadZoneComponent {
   filesSelected = output<File[]>();
   isDragging = signal(false);
-  private static readonly SUPPORTED_MIME_TYPES = new Set([
-    'application/pdf',
-    'image/png',
-    'image/jpeg',
-  ]);
-  private static readonly SUPPORTED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
+  readonly supportedUploadAccept = SUPPORTED_UPLOAD_ACCEPT;
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -86,11 +86,11 @@ export class UploadZoneComponent {
 
   private filterSupportedFiles(files: File[]): File[] {
     return files.filter((file) => {
-      if (UploadZoneComponent.SUPPORTED_MIME_TYPES.has(file.type)) {
+      if (SUPPORTED_UPLOAD_MIME_TYPES.has(file.type)) {
         return true;
       }
       const lowerName = file.name.toLowerCase();
-      return UploadZoneComponent.SUPPORTED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+      return SUPPORTED_UPLOAD_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
     });
   }
 }

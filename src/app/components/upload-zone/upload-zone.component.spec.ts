@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UploadZoneComponent } from './upload-zone.component';
+import { SUPPORTED_UPLOAD_ACCEPT } from '../../constants/upload.constants';
 
 describe('UploadZoneComponent', () => {
   let fixture: ComponentFixture<UploadZoneComponent>;
@@ -17,7 +18,7 @@ describe('UploadZoneComponent', () => {
 
   it('should restrict picker accept types to supported document/image formats', () => {
     const input = fixture.nativeElement.querySelector('input[type="file"]') as HTMLInputElement;
-    expect(input.accept).toBe('.pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg');
+    expect(input.accept).toBe(SUPPORTED_UPLOAD_ACCEPT);
   });
 
   it('should emit only supported file types from file selection', () => {

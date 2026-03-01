@@ -106,7 +106,7 @@
       #hiddenFileInput
       type="file"
       class="sr-only"
-      accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
+      [attr.accept]="supportedUploadAccept"
       multiple
       (change)="onHiddenFileSelected($event)"
     />

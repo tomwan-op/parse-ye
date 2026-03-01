@@ -15,6 +15,7 @@ import { ResultsPanelComponent } from './components/results-panel/results-panel.
 import { SettingsModalComponent } from './components/settings-modal/settings-modal.component';
 import { BrowserNotSupportedComponent } from './components/browser-not-supported/browser-not-supported.component';
 import { DocumentStructure, DocumentType, HkbrData, Page } from './models/document.models';
+import { SUPPORTED_UPLOAD_ACCEPT } from './constants/upload.constants';
 
 @Component({
   selector: 'app-root',
@@ -48,6 +49,7 @@ export class AppComponent implements OnInit {
   readonly isProcessing = signal(false);
   readonly documentType = signal<DocumentType>('OTHER');
   readonly hkbrData = signal<HkbrData | null>(null);
+  readonly supportedUploadAccept = SUPPORTED_UPLOAD_ACCEPT;
 
   private hiddenFileInput = viewChild<ElementRef<HTMLInputElement>>('hiddenFileInput');
 
