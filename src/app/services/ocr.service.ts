@@ -37,11 +37,8 @@ export class OcrService {
   async detectFromCanvas(canvas: HTMLCanvasElement): Promise<OcrLine[]> {
     await this.ensureModel();
 
-    const blob = await new Promise<Blob>((resolve) => {
-      canvas.toBlob((b) => resolve(b!), 'image/png');
-    });
-
-    const result = await this.pipeline(blob);
+    const imageDataUrl = canvas.toDataURL('image/png');
+    const result = await this.pipeline(imageDataUrl);
     const rawText: string = result?.[0]?.generated_text ?? '';
 
     return this.parseDonutOutput(rawText, canvas.width, canvas.height);

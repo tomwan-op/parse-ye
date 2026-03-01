@@ -155,8 +155,19 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.1  
+**Version:** 0.7.3  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.3 — Upload Controls Restricted to Supported File Types)
+- [x] Updated upload file picker `accept` filters (both UploadZone and navbar hidden input) to explicitly allow only supported formats: PDF, PNG, JPG/JPEG
+- [x] UploadZone now filters dropped/selected files client-side and emits only supported files (MIME or extension fallback)
+- [x] Added focused unit tests for UploadZone accept attribute and supported-file emission behavior
+- [x] Build passes with zero errors
+
+### Completed (v0.7.2 — Fix Donut Pipeline Input Type for Canvas Processing)
+- [x] Fixed processing error `Unsupported input type: object` by passing a PNG data URL string (from `canvas.toDataURL('image/png')`) to the Donut pipeline instead of a Blob object
+- [x] Added focused unit test for `OcrService.detectFromCanvas()` to verify the pipeline receives a data URL input
+- [x] Build passes with zero errors
 
 ### Completed (v0.7.1 — Browser Module Resolution + ONNX WASM Availability)
 - [x] Fixed browser runtime resolution error `Module name, 'fs' does not resolve to a valid URL` by loading the browser-focused Transformers bundle (`@xenova/transformers/dist/transformers.min.js`) in OcrService
