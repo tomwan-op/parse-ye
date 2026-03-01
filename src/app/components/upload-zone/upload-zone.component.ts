@@ -28,14 +28,14 @@ import { Component, output, signal } from '@angular/core';
           or click to browse files
         </p>
         <p class="text-xs text-slate-500">
-          Supports PDF, PNG, JPG · Multiple files allowed
+          Supports PDF, PNG, JPG/JPEG only · Multiple files allowed
         </p>
 
         <input
           #fileInput
           type="file"
           class="sr-only"
-          accept=".pdf,.png,.jpg,.jpeg"
+          accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg"
           multiple
           (change)="onFileSelected($event)"
         />
@@ -46,6 +46,12 @@ import { Component, output, signal } from '@angular/core';
 export class UploadZoneComponent {
   filesSelected = output<File[]>();
   isDragging = signal(false);
+  private static readonly SUPPORTED_MIME_TYPES = new Set([
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+  ]);
+  private static readonly SUPPORTED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -63,7 +69,7 @@ export class UploadZoneComponent {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
-    const files = Array.from(event.dataTransfer?.files ?? []);
+    const files = this.filterSupportedFiles(Array.from(event.dataTransfer?.files ?? []));
     if (files.length > 0) {
       this.filesSelected.emit(files);
     }
@@ -71,10 +77,20 @@ export class UploadZoneComponent {
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const files = Array.from(input.files ?? []);
+    const files = this.filterSupportedFiles(Array.from(input.files ?? []));
     if (files.length > 0) {
       this.filesSelected.emit(files);
     }
     input.value = '';
+  }
+
+  private filterSupportedFiles(files: File[]): File[] {
+    return files.filter((file) => {
+      if (UploadZoneComponent.SUPPORTED_MIME_TYPES.has(file.type)) {
+        return true;
+      }
+      const lowerName = file.name.toLowerCase();
+      return UploadZoneComponent.SUPPORTED_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+    });
   }
 }
