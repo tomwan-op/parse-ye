@@ -69,12 +69,27 @@ export class AppComponent implements OnInit {
     this.documentStructure.set(null);
     this.ui.resetProgress();
 
-    await this.pdfService.loadFile(file);
-    this.hasDocument.set(true);
-    this.activePage.set(1);
+    try {
+      await this.pdfService.loadFile(file);
+      this.hasDocument.set(true);
+      this.activePage.set(1);
 
-    const pages = this.pdfService.pages();
-    this.thumbnails.set(pages.map(p => ({ pageNumber: p.pageNumber })));
+      const pages = this.pdfService.pages();
+      this.thumbnails.set(pages.map(p => ({ pageNumber: p.pageNumber })));
+      this.ui.sidebarOpen.set(true);
+    } catch (error) {
+      console.error('Failed to load file:', error);
+      this.hasDocument.set(false);
+      this.thumbnails.set([]);
+      this.ui.sidebarOpen.set(false);
+      this.ui.updateProgress({
+        status: 'error',
+        currentPage: 0,
+        totalPages: 0,
+        message: `Failed to load file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        percent: 0,
+      });
+    }
   }
 
   async processDocument(): Promise<void> {
@@ -174,6 +189,8 @@ export class AppComponent implements OnInit {
     this.documentStructure.set(null);
     this.isProcessing.set(false);
     this.ui.resetProgress();
+    this.ui.sidebarOpen.set(false);
+    this.ui.resultsPanelOpen.set(false);
   }
 
   async onExport(format: string): Promise<void> {

@@ -61,7 +61,7 @@ jobs:
 
       # 4. Production build
       - name: Build application
-        run: npm run build
+        run: npm run build -- --base-href /parse-ye/
 
       # 5. Deploy to gh-pages branch
       #    peaceiris/actions-gh-pages pushes the contents of PUBLISH_DIR
