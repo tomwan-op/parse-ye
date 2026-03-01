@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 export interface OcrLine {
   text: string;
   confidence: number;
-  box: number[][];
+  box: [number, number][];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -50,7 +50,7 @@ export class OcrService {
 
     return lines.map((line) => ({
       ...line,
-      box: line.box.map(([x, y]) => [x * scaleX, y * scaleY]),
+      box: line.box.map(([x, y]): [number, number] => [x * scaleX, y * scaleY]),
     }));
   }
 

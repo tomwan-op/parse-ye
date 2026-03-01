@@ -35,8 +35,8 @@ describe('OcrService', () => {
 
     const drawImageSpy = jasmine.createSpy('drawImage');
     const resizedCanvas = {
-      width: 0,
-      height: 0,
+      width: 1600,
+      height: 800,
       getContext: jasmine.createSpy('getContext').and.returnValue({ drawImage: drawImageSpy }),
       toDataURL: jasmine.createSpy('toDataURL').and.returnValue('data:image/png;base64,resized'),
     } as unknown as HTMLCanvasElement;
@@ -50,14 +50,16 @@ describe('OcrService', () => {
     } as unknown as HTMLCanvasElement;
 
     const lines = await service.detectFromCanvas(sourceCanvas);
+    const expectedScaleX = sourceCanvas.width / resizedCanvas.width;
+    const expectedScaleY = sourceCanvas.height / resizedCanvas.height;
 
     expect(document.createElement).toHaveBeenCalledWith('canvas');
-    expect(drawImageSpy).toHaveBeenCalled();
+    expect(drawImageSpy).toHaveBeenCalledWith(sourceCanvas, 0, 0, 1600, 800);
     expect(sourceCanvas.toDataURL).not.toHaveBeenCalled();
     expect(resizedCanvas.toDataURL).toHaveBeenCalledWith('image/png');
     expect(pipelineSpy).toHaveBeenCalledWith('data:image/png;base64,resized');
     expect(lines.length).toBe(1);
-    expect(lines[0].box[0][0]).toBeCloseTo(25, 5);
-    expect(lines[0].box[0][1]).toBeCloseTo(25, 5);
+    expect(lines[0].box[0][0]).toBeCloseTo(10 * expectedScaleX, 5);
+    expect(lines[0].box[0][1]).toBeCloseTo(10 * expectedScaleY, 5);
   });
 });
