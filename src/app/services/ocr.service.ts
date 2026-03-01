@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 export interface OcrLine {
   text: string;
   confidence: number;
-  box: number[][];
+  box: [number, number][];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -16,6 +16,7 @@ export class OcrService {
   private static readonly MODEL_ID = 'Xenova/donut-base-finetuned-cord-v2';
   private static readonly SYNTHETIC_CONFIDENCE = 0.8;
   private static readonly BBOX_MARGIN = 10;
+  private static readonly MAX_INFERENCE_DIMENSION = 1600;
 
   async ensureModel(): Promise<void> {
     if (this.pipeline) return;
@@ -37,26 +38,66 @@ export class OcrService {
   async detectFromCanvas(canvas: HTMLCanvasElement): Promise<OcrLine[]> {
     await this.ensureModel();
 
-    const imageDataUrl = canvas.toDataURL('image/png');
+    const { inferenceCanvas, scaleX, scaleY } = this.prepareCanvasForInference(canvas);
+    const imageDataUrl = inferenceCanvas.toDataURL('image/png');
     const result = await this.pipeline(imageDataUrl);
     const rawText: string = result?.[0]?.generated_text ?? '';
+    const lines = this.parseDonutOutput(rawText, inferenceCanvas.width, inferenceCanvas.height);
 
-    return this.parseDonutOutput(rawText, canvas.width, canvas.height);
+    if (scaleX === 1 && scaleY === 1) {
+      return lines;
+    }
+
+    return lines.map((line) => ({
+      ...line,
+      box: line.box.map(([x, y]): [number, number] => [x * scaleX, y * scaleY]),
+    }));
+  }
+
+  private prepareCanvasForInference(canvas: HTMLCanvasElement): {
+    inferenceCanvas: HTMLCanvasElement;
+    scaleX: number;
+    scaleY: number;
+  } {
+    const maxDimension = Math.max(canvas.width, canvas.height);
+    if (maxDimension <= OcrService.MAX_INFERENCE_DIMENSION) {
+      return { inferenceCanvas: canvas, scaleX: 1, scaleY: 1 };
+    }
+
+    const ratio = OcrService.MAX_INFERENCE_DIMENSION / maxDimension;
+    const targetWidth = Math.max(1, Math.round(canvas.width * ratio));
+    const targetHeight = Math.max(1, Math.round(canvas.height * ratio));
+    const inferenceCanvas = document.createElement('canvas');
+    inferenceCanvas.width = targetWidth;
+    inferenceCanvas.height = targetHeight;
+
+    const ctx = inferenceCanvas.getContext('2d');
+    if (!ctx) {
+      return { inferenceCanvas: canvas, scaleX: 1, scaleY: 1 };
+    }
+    ctx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+
+    return {
+      inferenceCanvas,
+      scaleX: canvas.width / targetWidth,
+      scaleY: canvas.height / targetHeight,
+    };
   }
 
   private parseDonutOutput(rawText: string, canvasWidth: number, canvasHeight: number): OcrLine[] {
     const lines: OcrLine[] = [];
 
     // Donut cord-v2 outputs XML-like tokens such as <s_menu><s_nm>text</s_nm>...
-    // Extract text values from token pairs like <s_TAG>value</s_TAG>
-    const tagPattern = /<s_([^>]+)>(.*?)<\/s_\1>/gs;
+    // Extract only leaf token values from pairs like <s_TAG>value</s_TAG>.
+    // This avoids collapsing nested structures into a single fallback plain-text line.
+    const tagPattern = /<s_([^>]+)>([^<]+)<\/s_\1>/g;
     let match: RegExpExecArray | null;
     const items: { label: string; value: string }[] = [];
 
     while ((match = tagPattern.exec(rawText)) !== null) {
       const label = match[1];
       const value = match[2].trim();
-      if (value && !value.startsWith('<')) {
+      if (value) {
         items.push({ label, value });
       }
     }
