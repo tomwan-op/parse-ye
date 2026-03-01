@@ -82,4 +82,24 @@ describe('OcrService', () => {
 
     expect(lines.map((line) => line.text)).toEqual(['正潮樓', '炒銀魚仔', '2004.0']);
   });
+
+  it('should extract values when Donut tag content contains inline helper tags', async () => {
+    const service = new OcrService();
+    const pipelineSpy = jasmine.createSpy('pipeline').and.resolveTo([{
+      generated_text: '<s_receipt><s_shop>正潮<sep/>樓</s_shop><s_total>$2,004.0</s_total></s_receipt>',
+    }]);
+
+    (service as any).pipeline = pipelineSpy;
+    spyOn(service, 'ensureModel').and.resolveTo();
+
+    const canvas = {
+      width: 600,
+      height: 900,
+      toDataURL: jasmine.createSpy('toDataURL').and.returnValue('data:image/png;base64,abc'),
+    } as unknown as HTMLCanvasElement;
+
+    const lines = await service.detectFromCanvas(canvas);
+
+    expect(lines.map((line) => line.text)).toEqual(['正潮 樓', '$2,004.0']);
+  });
 });

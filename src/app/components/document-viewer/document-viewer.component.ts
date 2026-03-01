@@ -109,6 +109,8 @@ import { DocumentStructure, DocumentElement } from '../../models/document.models
 })
 export class DocumentViewerComponent {
   private static readonly RENDER_SCALE = 1.5;
+  // Cap rendered canvas side length to keep large-image viewing stable in browser memory.
+  private static readonly MAX_RENDER_DIMENSION = 2200;
 
   ui = inject(UiService);
   pdfService = inject(PdfService);
@@ -127,7 +129,7 @@ export class DocumentViewerComponent {
       const page = this.activePage();
       const canvas = this.documentCanvas();
       if (canvas) {
-        this.pdfService.renderPage(page, canvas.nativeElement, DocumentViewerComponent.RENDER_SCALE);
+        this.pdfService.renderPage(page, canvas.nativeElement, this.getRenderScale(page));
       }
     });
 
@@ -177,7 +179,13 @@ export class DocumentViewerComponent {
       other: 'rgba(148, 163, 184, 0.4)',
     };
 
-    const scale = DocumentViewerComponent.RENDER_SCALE;
+    const pageData = this.pdfService.pages().find((p) => p.pageNumber === pageNumber);
+    const computedScale = pageData && pageData.width > 0 && doc.width > 0
+      ? doc.width / pageData.width
+      : DocumentViewerComponent.RENDER_SCALE;
+    const scale = Number.isFinite(computedScale) && computedScale > 0
+      ? computedScale
+      : DocumentViewerComponent.RENDER_SCALE;
 
     for (const element of page.elements) {
       const { x, y, width, height } = element.bbox;
@@ -204,5 +212,20 @@ export class DocumentViewerComponent {
       ctx.font = '10px system-ui';
       ctx.fillText('table', x * scale + 2, y * scale - 3);
     }
+  }
+
+  private getRenderScale(pageNumber: number): number {
+    const pageData = this.pdfService.pages().find((p) => p.pageNumber === pageNumber);
+    if (!pageData) {
+      return DocumentViewerComponent.RENDER_SCALE;
+    }
+    const maxSide = Math.max(pageData.width, pageData.height);
+    if (maxSide === 0) {
+      return DocumentViewerComponent.RENDER_SCALE;
+    }
+    return Math.min(
+      DocumentViewerComponent.RENDER_SCALE,
+      DocumentViewerComponent.MAX_RENDER_DIMENSION / maxSide,
+    );
   }
 }
