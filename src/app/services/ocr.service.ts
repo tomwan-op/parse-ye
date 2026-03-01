@@ -21,7 +21,8 @@ export class OcrService {
     if (this.pipeline) return;
     this.isModelLoading.set(true);
     try {
-      const { pipeline } = await import('@xenova/transformers');
+      const { env, pipeline } = await import('@xenova/transformers/dist/transformers.min.js');
+      env.backends.onnx.wasm.wasmPaths = new URL('assets/onnxruntime/', document.baseURI).href;
       this.pipeline = await pipeline(
         'image-to-text',
         OcrService.MODEL_ID,

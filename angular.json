@@ -54,6 +54,11 @@
                 "glob": "pdf.worker.min.mjs",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/assets/"
+              },
+              {
+                "glob": "ort-wasm*.wasm",
+                "input": "node_modules/@xenova/transformers/dist",
+                "output": "/assets/onnxruntime/"
               }
             ],
             "styles": [
@@ -133,6 +138,11 @@
                 "glob": "pdf.worker.min.mjs",
                 "input": "node_modules/pdfjs-dist/build",
                 "output": "/assets/"
+              },
+              {
+                "glob": "ort-wasm*.wasm",
+                "input": "node_modules/@xenova/transformers/dist",
+                "output": "/assets/onnxruntime/"
               }
             ],
             "styles": [

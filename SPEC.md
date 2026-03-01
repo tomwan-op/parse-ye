@@ -155,8 +155,15 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.0  
+**Version:** 0.7.1  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.1 — Browser Module Resolution + ONNX WASM Availability)
+- [x] Fixed browser runtime resolution error `Module name, 'fs' does not resolve to a valid URL` by loading the browser-focused Transformers bundle (`@xenova/transformers/dist/transformers.min.js`) in OcrService
+- [x] Configured ONNX Runtime Web WASM path via `env.backends.onnx.wasm.wasmPaths` to `assets/onnxruntime/`
+- [x] Updated `angular.json` assets (build + test) to copy `ort-wasm*.wasm` from `@xenova/transformers/dist` into `/assets/onnxruntime/`
+- [x] Added local TypeScript module declaration for `@xenova/transformers/dist/transformers.min.js`
+- [x] Build passes with zero errors
 
 ### Completed (v0.7.0 — Donut-based Document Processing Pipeline)
 - [x] Replaced PaddleOCR (@gutenye/ocr-browser) with @xenova/transformers + Donut model (Xenova/donut-base-finetuned-cord-v2, quantized)
