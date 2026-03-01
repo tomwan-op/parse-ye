@@ -1,7 +1,7 @@
 @if (browserSupport.checkComplete()) {
   @if (browserSupport.isSupported()) {
     <!-- Main App Layout -->
-    <div class="h-screen flex flex-col overflow-hidden">
+    <div class="h-[100dvh] flex flex-col overflow-hidden">
       <!-- Navbar -->
       <app-navbar
         (uploadClicked)="triggerUpload()"
@@ -56,7 +56,7 @@
         }
 
         <!-- Center: Document viewer or Upload zone -->
-        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
           @if (hasDocument()) {
             <app-document-viewer
               class="flex-1 flex flex-col overflow-hidden"
@@ -89,7 +89,7 @@
     <input
       #hiddenFileInput
       type="file"
-      class="hidden"
+      class="sr-only"
       accept=".pdf,.png,.jpg,.jpeg"
       multiple
       (change)="onHiddenFileSelected($event)"

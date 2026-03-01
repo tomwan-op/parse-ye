@@ -5,8 +5,8 @@ export type FitMode = 'fit-width' | 'fit-height' | 'original';
 
 @Injectable({ providedIn: 'root' })
 export class UiService {
-  readonly sidebarOpen = signal(true);
-  readonly resultsPanelOpen = signal(true);
+  readonly sidebarOpen = signal(false);
+  readonly resultsPanelOpen = signal(false);
   readonly activeResultTab = signal<ResultTab>('overlay');
   readonly settingsOpen = signal(false);
   readonly currentZoom = signal(1);

@@ -1,8 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set the worker source (served from /assets/ via angular.json asset config)
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.min.mjs';
+// Set the worker source relative to the document base URI so it works
+// both on localhost and when deployed to a sub-path (e.g. GitHub Pages).
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'assets/pdf.worker.min.mjs',
+  document.baseURI,
+).href;
 
 export interface PageData {
   pageNumber: number;
@@ -26,14 +30,29 @@ export class PdfService {
     this.currentFile.set(file);
 
     try {
-      if (file.type === 'application/pdf') {
+      // Some mobile browsers return an empty file.type; fall back to extension.
+      const mimeType = file.type || this.getMimeTypeFromExtension(file.name);
+      if (mimeType === 'application/pdf') {
         await this.loadPdf(file);
-      } else if (file.type.startsWith('image/')) {
+      } else if (mimeType.startsWith('image/')) {
         await this.loadImage(file);
+      } else {
+        throw new Error(`Unsupported file type: ${file.name}`);
       }
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  private getMimeTypeFromExtension(filename: string): string {
+    const ext = filename.split('.').pop()?.toLowerCase() ?? '';
+    const map: Record<string, string> = {
+      pdf: 'application/pdf',
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+    };
+    return map[ext] ?? 'application/octet-stream';
   }
 
   private async loadPdf(file: File): Promise<void> {

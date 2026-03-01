@@ -125,8 +125,22 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.5.1  
-**Last updated:** 2026-02-28
+**Version:** 0.5.2  
+**Last updated:** 2026-03-01
+
+### Completed (v0.5.2 — Mobile UX & Upload Bug Fixes)
+- [x] **Upload fix**: UploadZoneComponent uses `<label>` wrapper with `class="sr-only"` input instead of programmatic `.click()` — reliable on all mobile browsers (iOS Safari, Android Chrome)
+- [x] **Upload fix**: `#hiddenFileInput` in AppComponent changed from `class="hidden"` to `class="sr-only"` for navbar upload button reliability on mobile
+- [x] **Upload fix**: Added try/catch error handling in `AppComponent.onFilesSelected` with user-visible error message via progress status
+- [x] **Upload fix**: PdfService worker path changed from absolute `/assets/pdf.worker.min.mjs` to `new URL('assets/pdf.worker.min.mjs', document.baseURI).href` — works correctly on GitHub Pages subdirectory and localhost
+- [x] **Upload fix**: Added MIME type fallback by file extension in PdfService (`getMimeTypeFromExtension`) — handles mobile browsers returning empty `file.type`; throws readable error for unsupported types
+- [x] **Mobile layout**: Default `sidebarOpen = signal(false)` and `resultsPanelOpen = signal(false)` in UiService — prevents panel overlay overlap on initial mobile load
+- [x] **Mobile layout**: Sidebar auto-opens after successful file load (`ui.sidebarOpen.set(true)` in `onFilesSelected`); both panels reset to closed in `clearDocument()`
+- [x] **Mobile layout**: Main container uses `h-[100dvh]` (dynamic viewport height) instead of `h-screen` (100vh) — accounts for mobile browser chrome (address bar)
+- [x] **Mobile scrolling**: Body `overflow-hidden` → `overflow-x-hidden` to allow vertical scrolling when content overflows on mobile
+- [x] **Mobile scrolling**: Center panel `overflow-hidden` → `overflow-y-auto` to allow vertical scrolling within content area
+- [x] **Deploy fix**: GitHub Pages deploy workflow now builds with `--base-href /parse-ye/` for correct asset and routing paths on subdirectory hosting
+- [x] Build passes with zero errors
 
 ### Completed (v0.1.0 — Project Skeleton)
 - [x] Tailwind CSS v3 + DaisyUI v4 configured with custom "parseye" dark theme
