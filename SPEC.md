@@ -155,8 +155,15 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.5  
+**Version:** 0.7.6  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.6 — Image Stability + Donut Extraction Robustness)
+- [x] DocumentViewer now applies adaptive render scaling for large pages/images (caps max rendered side) to reduce canvas memory pressure during image workflows and prevent browser reload/crash behavior
+- [x] Overlay drawing scale now derives from rendered canvas width vs source page width so bbox overlays remain aligned when adaptive scaling is used
+- [x] OcrService Donut parser now tolerates inline helper tags inside value tags (e.g. `<sep/>`) and extracts segment text before plain-text fallback, improving text recovery on tricky receipt/PDF outputs
+- [x] Added focused unit test for inline helper-tag extraction path in `ocr.service.spec.ts`
+- [x] Build and tests pass with zero errors
 
 ### Completed (v0.7.5 — Donut Nested-Tag Text Extraction Fix)
 - [x] Fixed OcrService Donut parser to extract leaf tag values (`<s_tag>value</s_tag>`) directly, preventing nested-tag outputs from collapsing into a single plain-text line
