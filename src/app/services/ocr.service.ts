@@ -14,6 +14,8 @@ export class OcrService {
   private pipeline: any = null;
 
   private static readonly MODEL_ID = 'Xenova/donut-base-finetuned-cord-v2';
+  private static readonly SYNTHETIC_CONFIDENCE = 0.8;
+  private static readonly BBOX_MARGIN = 10;
 
   async ensureModel(): Promise<void> {
     if (this.pipeline) return;
@@ -71,13 +73,13 @@ export class OcrService {
 
     // Create OcrLine entries with estimated bounding boxes
     const rowHeight = items.length > 0 ? canvasHeight / items.length : canvasHeight;
-    const margin = 10;
+    const margin = OcrService.BBOX_MARGIN;
 
     for (let i = 0; i < items.length; i++) {
       const yStart = i * rowHeight;
       lines.push({
         text: items[i].value,
-        confidence: 0.8,
+        confidence: OcrService.SYNTHETIC_CONFIDENCE,
         box: [
           [margin, yStart + margin],
           [canvasWidth - margin, yStart + margin],
