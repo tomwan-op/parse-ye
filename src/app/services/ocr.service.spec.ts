@@ -62,4 +62,24 @@ describe('OcrService', () => {
     expect(lines[0].box[0][0]).toBeCloseTo(10 * expectedScaleX, 5);
     expect(lines[0].box[0][1]).toBeCloseTo(10 * expectedScaleY, 5);
   });
+
+  it('should extract leaf text values from nested Donut tags instead of collapsing to one numeric line', async () => {
+    const service = new OcrService();
+    const pipelineSpy = jasmine.createSpy('pipeline').and.resolveTo([{
+      generated_text: '<s_receipt><s_shop>正潮樓</s_shop><s_item>炒銀魚仔</s_item><s_total>2004.0</s_total></s_receipt>',
+    }]);
+
+    (service as any).pipeline = pipelineSpy;
+    spyOn(service, 'ensureModel').and.resolveTo();
+
+    const canvas = {
+      width: 600,
+      height: 900,
+      toDataURL: jasmine.createSpy('toDataURL').and.returnValue('data:image/png;base64,abc'),
+    } as unknown as HTMLCanvasElement;
+
+    const lines = await service.detectFromCanvas(canvas);
+
+    expect(lines.map((line) => line.text)).toEqual(['正潮樓', '炒銀魚仔', '2004.0']);
+  });
 });

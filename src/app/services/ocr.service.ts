@@ -88,15 +88,16 @@ export class OcrService {
     const lines: OcrLine[] = [];
 
     // Donut cord-v2 outputs XML-like tokens such as <s_menu><s_nm>text</s_nm>...
-    // Extract text values from token pairs like <s_TAG>value</s_TAG>
-    const tagPattern = /<s_([^>]+)>(.*?)<\/s_\1>/gs;
+    // Extract only leaf token values from pairs like <s_TAG>value</s_TAG>.
+    // This avoids collapsing nested structures into a single fallback plain-text line.
+    const tagPattern = /<s_([^>]+)>([^<]+)<\/s_\1>/g;
     let match: RegExpExecArray | null;
     const items: { label: string; value: string }[] = [];
 
     while ((match = tagPattern.exec(rawText)) !== null) {
       const label = match[1];
       const value = match[2].trim();
-      if (value && !value.startsWith('<')) {
+      if (value) {
         items.push({ label, value });
       }
     }

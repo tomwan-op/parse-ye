@@ -155,8 +155,13 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.4  
+**Version:** 0.7.5  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.5 — Donut Nested-Tag Text Extraction Fix)
+- [x] Fixed OcrService Donut parser to extract leaf tag values (`<s_tag>value</s_tag>`) directly, preventing nested-tag outputs from collapsing into a single plain-text line
+- [x] Added focused unit test to verify nested Donut output returns separate text lines (including non-Latin text) instead of one aggregated numeric-like string
+- [x] Build and tests pass with zero errors
 
 ### Completed (v0.7.4 — Prevent Image Processing Reload on Large Inputs)
 - [x] OcrService now downscales oversized canvases before Donut inference (max side 1600px) to reduce runtime memory pressure on image uploads
