@@ -32,14 +32,17 @@ ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, n
   - StructureService (post-process PaddleOCR output → hierarchical structure + table detection)
   - ExportService
   - UiService (theme, progress, overlays)
+  - **HkbrParserService** (extracts HKBR fields from DocumentStructure — BR Number, Company Name, Issue Date, Expiry Date)
+  - **HkbrValidatorService** (rule-based validation of HkbrData; returns updated HkbrData with validationScore and issues list)
 - Components (standalone):
   - UploadZoneComponent
   - DocumentViewerComponent (canvas + zoom + overlays)
   - ThumbnailsSidebarComponent
-  - ResultsPanelComponent (tabs)
+  - ResultsPanelComponent (tabs; HKBR card when document type = HKBR)
   - SettingsModalComponent
   - BrowserNotSupportedComponent
 - Data flow: Upload → PdfService → (optional preprocess) → OcrService → StructureService → UI
+- HKBR data flow (when DocumentType = 'HKBR'): …→ StructureService → HkbrParserService → HkbrValidatorService → HKBR Data card in ResultsPanel
 
 ## 5. Features (MVP – must be complete before v1.0)
 
@@ -48,14 +51,28 @@ ParseYe is a beautiful, modern, **100% pure frontend** (no backend, no server, n
 3. Toggleable colored bounding-box overlays on the canvas (color per element type)
 4. Process button with options: language selector (multi-select), preprocessing toggle
 5. Real-time progress indicators with step-by-step status
-6. Results panel (tabs):
+6. **Document-type selector** (shown above the dropzone before upload):
+   - Options: "Hong Kong Business Registration (HKBR)" | "Other (Arbitrary Document)"
+   - Default: "Other"
+7. Results panel (tabs for "Other" type):
    - Visual Overlay (live on preview)
    - Hierarchical Tree (interactive)
    - Tables (editable HTML tables)
    - Markdown preview
    - Raw JSON viewer
-7. One-click exports: Full JSON, Markdown, Plain TXT, Searchable PDF
-8. Dark mode default, responsive design (mobile-friendly collapse)
+8. **HKBR Mode** (when "Hong Kong Business Registration" is selected):
+   - After OCR, runs HkbrParserService → HkbrValidatorService
+   - Results panel shows a "HKBR Data" card with editable fields:
+     - BR Number, Company Name, Issue Date, Expiry Date
+   - Validation badge: green "✅ Valid HKBR Data" or red "⚠️ Missing / invalid fields: ..."
+   - Validation score (0–100, simple: 25 points per valid field)
+   - Mandatory field rules:
+     - BR Number: must exist and match `/^\d{8}$/`
+     - Company Name: must exist and be non-empty
+     - Issue Date: must exist and be a valid date (DD/MM/YYYY or YYYY-MM-DD)
+     - Expiry Date: must exist and be a valid date
+9. One-click exports: Full JSON, Markdown, Plain TXT, Searchable PDF
+10. Dark mode default, responsive design (mobile-friendly collapse)
 
 ## 6. Output Data Schema (exact TypeScript interfaces – must match)
 
@@ -88,6 +105,17 @@ export interface Table {
   bbox: { x: number; y: number; width: number; height: number };
   rows: string[][];
 }
+
+export type DocumentType = 'HKBR' | 'OTHER';
+
+export interface HkbrData {
+  brNumber: string;
+  companyName: string;
+  issueDate: string;
+  expiryDate: string;
+  validationScore: number;  // 0-100 (25 pts per valid mandatory field)
+  issues: string[];         // e.g. ["BR Number missing", "Expiry Date invalid"]
+}
 ```
 
 ## 7. Processing Pipeline (exact order – must be followed)
@@ -110,7 +138,9 @@ export interface Table {
   - Top navbar: Logo "ParseYe", Upload button, Settings, Export dropdown, Theme toggle
   - Left sidebar: Vertical scrollable thumbnails
   - Center: Interactive document preview (canvas with zoom controls, page counter)
-  - Right panel (collapsible): Results tabs
+  - **Document-type selector row** (shown above the dropzone, before upload): compact `<select>` with label "Document type:", options "Other (Arbitrary Document)" (default) and "Hong Kong Business Registration (HKBR)", styled with DaisyUI `select-sm` in `bg-slate-800`
+  - Right panel (collapsible): Results tabs (for "Other") or **HKBR Data card** (for "HKBR")
+    - HKBR Data card: validation badge at top (green ✅ or red ⚠️ with issue list + score%), then 4 editable text fields (BR Number, Company Name, Issue Date, Expiry Date) with slate-800 background, indigo focus ring
 - Typography: Clean sans-serif (system or Inter)
 - Style: High whitespace, subtle shadows, rounded-xl cards, smooth transitions, modern SaaS feel (inspired by Notion + Adobe Acrobat + Claude)
 
@@ -125,8 +155,18 @@ export interface Table {
 
 ## 10. Implementation Status
 
-**Version:** 0.5.2  
+**Version:** 0.6.0  
 **Last updated:** 2026-03-01
+
+### Completed (v0.6.0 — Phase 1 HKBR Document Processing)
+- [x] Added `DocumentType` type (`'HKBR' | 'OTHER'`) and `HkbrData` interface to `document.models.ts`
+- [x] `HkbrParserService` (`hkbr-parser.service.ts`) — extracts BR Number, Company Name, Issue Date, Expiry Date from `DocumentStructure` using regex heuristics
+- [x] `HkbrValidatorService` (`hkbr-validator.service.ts`) — validates extracted fields (BR Number `/^\d{8}$/`, non-empty company name, valid date formats), computes `validationScore` (0–100) and `issues` list
+- [x] `AppComponent`: injected HkbrParserService + HkbrValidatorService; added `documentType` signal (default `'OTHER'`) and `hkbrData` signal; after OCR processing, runs HKBR pipeline when `documentType === 'HKBR'`; `clearDocument()` resets `hkbrData`
+- [x] `app.component.html`: document-type selector row (label + `<select>`) shown above dropzone when no document is loaded; `[documentType]` and `[hkbrData]` passed to ResultsPanelComponent
+- [x] `ResultsPanelComponent`: accepts `documentType` and `hkbrData` inputs; when HKBR mode shows editable HKBR Data card with validation badge and 4 field inputs; when OTHER mode shows existing 5 tabs unchanged; uses `effect()` to sync incoming `hkbrData` to local editable signal
+- [x] SPEC.md updated: sections 4, 5, 6, 8 updated; version incremented to 0.6.0
+- [x] Build passes with zero errors
 
 ### Completed (v0.5.2 — Mobile UX & Upload Bug Fixes)
 - [x] **Upload fix**: UploadZoneComponent uses `<label>` wrapper with `class="sr-only"` input instead of programmatic `.click()` — reliable on all mobile browsers (iOS Safari, Android Chrome)
@@ -210,13 +250,18 @@ export interface Table {
 
 ## 11. Next Tasks (for next agent session)
 
-### v0.6.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
+### v0.6.1 — HKBR Phase 2: QR + Template Validation
+- [ ] QR code scanning in browser (jsQR or zxing-js) to extract BR Number from QR code on HKBR document
+- [ ] Template-based validation: overlay expected field positions on HKBR document canvas
+- [ ] Cross-check QR-extracted BR Number against OCR-extracted BR Number
+
+### v0.7.0 — Web Worker OCR + Preprocessing (SPEC §7.2, §7.3, §4)
 - [ ] Move OCR inference into a dedicated Web Worker using Comlink (SPEC §2 requirement: "All heavy processing must run in Web Workers + Comlink")
 - [ ] Implement optional image preprocessing pipeline (SPEC §7.2): contrast enhancement, deskew, binarize using Native Canvas API
 - [ ] Wire preprocessing toggle from SettingsModalComponent to the processing pipeline
 - [ ] Add language selector state management (SettingsModalComponent → OcrService)
 
-### v0.7.0 — Enhanced UI Features (SPEC §5)
+### v0.8.0 — Enhanced UI Features (SPEC §5)
 - [ ] Multi-file support: handle multiple files in upload, show file list, switch between files
 - [ ] Editable HTML tables in Results Panel Tables tab (SPEC §5.6)
 - [ ] Markdown preview with rendered HTML using `marked` library (SPEC §5.6)

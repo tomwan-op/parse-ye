@@ -64,6 +64,18 @@
               [documentStructure]="documentStructure()"
             />
           } @else {
+            <!-- Document type selector row -->
+            <div class="shrink-0 flex items-center justify-center gap-3 pt-4 px-4">
+              <label class="text-xs text-slate-400 whitespace-nowrap">Document type:</label>
+              <select
+                class="select select-sm bg-slate-800 border-slate-700 text-slate-200 text-xs rounded-lg focus:outline-none focus:border-indigo-500"
+                [value]="documentType()"
+                (change)="documentType.set($any($event.target).value)"
+              >
+                <option value="OTHER">Other (Arbitrary Document)</option>
+                <option value="HKBR">Hong Kong Business Registration (HKBR)</option>
+              </select>
+            </div>
             <app-upload-zone class="flex-1" (filesSelected)="onFilesSelected($event)" />
           }
 
@@ -75,7 +87,11 @@
 
         <!-- Right: Results panel -->
         @if (ui.resultsPanelOpen()) {
-          <app-results-panel [documentStructure]="documentStructure()" />
+          <app-results-panel
+            [documentStructure]="documentStructure()"
+            [documentType]="documentType()"
+            [hkbrData]="hkbrData()"
+          />
           <!-- Mobile overlay backdrop for results panel -->
           <div
             class="lg:hidden fixed inset-x-0 top-14 bottom-0 bg-black/40 z-30"
