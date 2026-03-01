@@ -155,8 +155,14 @@ export interface HkbrData {
 
 ## 10. Implementation Status
 
-**Version:** 0.7.3  
+**Version:** 0.7.4  
 **Last updated:** 2026-03-01
+
+### Completed (v0.7.4 — Prevent Image Processing Reload on Large Inputs)
+- [x] OcrService now downscales oversized canvases before Donut inference (max side 1600px) to reduce runtime memory pressure on image uploads
+- [x] OcrService remaps synthesized OCR bounding boxes back to the original canvas coordinate space after inference
+- [x] Added focused unit test verifying large-canvas downscale path uses resized PNG data URL input and preserves expected box scaling
+- [x] Build passes with zero errors
 
 ### Completed (v0.7.3 — Upload Controls Restricted to Supported File Types)
 - [x] Updated upload file picker `accept` filters (both UploadZone and navbar hidden input) to explicitly allow only supported formats: PDF, PNG, JPG/JPEG
