@@ -45,3 +45,14 @@ export interface ProcessingProgress {
 }
 
 export type ResultTab = 'overlay' | 'tree' | 'tables' | 'markdown' | 'json';
+
+export type DocumentType = 'HKBR' | 'OTHER';
+
+export interface HkbrData {
+  brNumber: string;
+  companyName: string;
+  issueDate: string;
+  expiryDate: string;
+  validationScore: number;  // 0-100
+  issues: string[];         // e.g. ["BR Number missing", "Expiry date invalid"]
+}

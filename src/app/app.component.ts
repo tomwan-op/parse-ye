@@ -5,6 +5,8 @@ import { PdfService } from './services/pdf.service';
 import { OcrService } from './services/ocr.service';
 import { StructureService } from './services/structure.service';
 import { ExportService } from './services/export.service';
+import { HkbrParserService } from './services/hkbr-parser.service';
+import { HkbrValidatorService } from './services/hkbr-validator.service';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ThumbnailsSidebarComponent } from './components/thumbnails-sidebar/thumbnails-sidebar.component';
 import { DocumentViewerComponent } from './components/document-viewer/document-viewer.component';
@@ -12,7 +14,7 @@ import { UploadZoneComponent } from './components/upload-zone/upload-zone.compon
 import { ResultsPanelComponent } from './components/results-panel/results-panel.component';
 import { SettingsModalComponent } from './components/settings-modal/settings-modal.component';
 import { BrowserNotSupportedComponent } from './components/browser-not-supported/browser-not-supported.component';
-import { DocumentStructure, Page } from './models/document.models';
+import { DocumentStructure, DocumentType, HkbrData, Page } from './models/document.models';
 
 @Component({
   selector: 'app-root',
@@ -36,12 +38,16 @@ export class AppComponent implements OnInit {
   readonly ocrService = inject(OcrService);
   readonly structureService = inject(StructureService);
   readonly exportService = inject(ExportService);
+  readonly hkbrParser = inject(HkbrParserService);
+  readonly hkbrValidator = inject(HkbrValidatorService);
 
   readonly hasDocument = signal(false);
   readonly thumbnails = signal<{ pageNumber: number }[]>([]);
   readonly activePage = signal(1);
   readonly documentStructure = signal<DocumentStructure | null>(null);
   readonly isProcessing = signal(false);
+  readonly documentType = signal<DocumentType>('OTHER');
+  readonly hkbrData = signal<HkbrData | null>(null);
 
   private hiddenFileInput = viewChild<ElementRef<HTMLInputElement>>('hiddenFileInput');
 
@@ -156,6 +162,13 @@ export class AppComponent implements OnInit {
 
       this.documentStructure.set(structure);
 
+      if (this.documentType() === 'HKBR') {
+        const parsed = this.hkbrParser.parse(structure);
+        this.hkbrData.set(this.hkbrValidator.validate(parsed));
+      } else {
+        this.hkbrData.set(null);
+      }
+
       this.ui.updateProgress({
         status: 'complete',
         currentPage: totalPages,
@@ -187,6 +200,7 @@ export class AppComponent implements OnInit {
     this.thumbnails.set([]);
     this.activePage.set(1);
     this.documentStructure.set(null);
+    this.hkbrData.set(null);
     this.isProcessing.set(false);
     this.ui.resetProgress();
     this.ui.sidebarOpen.set(false);
